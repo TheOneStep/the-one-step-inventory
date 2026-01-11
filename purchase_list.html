@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>거래 목록 (매입 · 매출)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+/* ✅ 반드시 CSS 제일 위 */
+*, *::before, *::after {
+  box-sizing: border-box;
+}  
+* { box-sizing:border-box; }
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+body {
+  margin:0;
+  padding:0;
+  background:#f6f7f9;
+}
+.container{
+  max-width:420px;
+  width:100%;
+  margin:0 auto;
+  padding:20px;      /* ✅ padding은 여기로 */
+  overflow-x:hidden;
+}
+/* 날짜 input 폭 강제 */
+input[type="date"]{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+}
+h3{
+  text-align:center;
+  margin-bottom:16px;
+}
+/* 기간 검색 (AdSense 스타일) */
+.range-box{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+.range-row{
+  display:flex;
+  gap:0px;
+}
+.range-box,
+.search-box {
+  width:100%;
+  max-width:100%;
+}
+.range-row input{
+  flex:1;
+  padding:10px;
+  font-size:14px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+.range-actions{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+}
+.range-actions button{
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  background:#f3f3f3;
+  cursor:pointer;
+}
+
+/* 검색 박스 */
+.search-box{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+.search-box input{
+  width:100%;
+  padding:12px;
+  font-size:15px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+/* 카드 */
+.card{
+  position:relative;
+  border-radius:16px;
+  padding:14px 14px 16px;
+  margin-bottom:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.06);
+  font-size:14px;
+}
+.card .title{ font-weight:700; margin-bottom:4px; }
+.card .barcode{ font-size:12px; color:#777; margin-bottom:6px; }
+.card .meta{ font-size:13px; color:#555; }
+.card .amount{ margin-top:6px; font-weight:700; }
+
+.btn-del{
+  position:absolute;
+  top:10px;
+  right:10px;
+  border:none;
+  background:transparent;
+  font-size:16px;
+  cursor:pointer;
+  color:#999;
+}
+.btn-del:hover{ color:#d00; }
+
+.card.purchase{ background:#eef4ff; }
+.card.sale{ background:#fff0f0; }
+
+.badge{
+  display:inline-block;
+  font-size:11px;
+  padding:3px 8px;
+  border-radius:999px;
+  margin-bottom:6px;
+}
+.badge.purchase{ background:#dbe7ff; color:#2b5fd9; }
+.badge.sale{ background:#ffdede; color:#d93b3b; }
+
+/* 엑셀 버튼 */
+.excel-box{
+  text-align:right;
+  margin:10px 0 14px;
+}
+.excel-box button{
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:8px;
+  border:1px solid #007aff;
+  background:#eef5ff;
+  color:#007aff;
+  cursor:pointer;
+}
+
+.empty{
+  text-align:center;
+  color:#777;
+  margin-top:40px;
+}
+/* ✅ 날짜 숫자 가독성 강화 */
+input[type="date"]{
+  color: #111;                 /* 숫자 색상 진하게 */
+  font-weight: 600;            /* 숫자 두께 */
+  letter-spacing: 0.3px;       /* 숫자 간격 */
+  background-color: #fff;
+  -webkit-text-fill-color: #111;  /* 안드로이드 강제 회색 방지 */
+  letter-spacing: 0;   /* ✅ 반드시 0 */
+}
+
+/* 날짜 placeholder 느낌 제거 */
+input[type="date"]::-webkit-datetime-edit {
+  color: #111;
+  font-weight: 600;
+}
+
+/* 날짜 세부 파트 (연/월/일) */
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field {
+  color: #111;
+  font-weight: 600;
+}
+/* ✅ 엑셀 줄 + 타입 선택 박스 (작게) */
+.excel-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0 14px;
+}
+
+/* 왼쪽 작은 사각 박스 */
+.type-box{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:8px 10px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+  flex:0 0 auto;
+}
+
+/* 체크 항목 */
+.type-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  color:#333;
+  white-space:nowrap;
+}
+
+/* 체크박스 크기 살짝만 */
+.type-item input{
+  width:18px;
+  height:18px;
+}
+
+/* 
+버튼(기존 버튼 스타일과 동일 톤) */
+.excel-btn{
+  margin-left:auto;
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:8px;
+  border:1px solid #007aff;
+  background:#eef5ff;
+  color:#007aff;
+  cursor:pointer;
+}
+.action-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:12px 0 14px;
+}
+
+.left-actions{
+  display:flex;
+  gap:10px;
+}
+
+.right-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* 엑셀: 아이콘 버튼 */
+.icon-btn{
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  border:1px solid #007aff;
+  background:#eef5ff;
+  color:#007aff;
+  font-size:18px;
+}
+
+/* 재고 관리: 텍스트 버튼 */
+.text-btn{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  background:#fff;
+  font-size:14px;
+  color:#333;
+}
+/* 🔵 검색창 텍스트 가운데 정렬 */
+.search-box input{
+  text-align: center;
+}
+
+/* 🔵 placeholder 가운데 정렬 (브라우저별 대응) */
+.search-box input::placeholder{
+  text-align: center;
+}
+
+.search-box input::-webkit-input-placeholder{
+  text-align: center;
+}
+
+.search-box input:-ms-input-placeholder{
+  text-align: center;
+}
+/* 🔝 상단 공통 네비 */
+.top-nav{
+  display:flex;
+  gap:10px;
+  margin:12px 0 16px;
+}
+
+.nav-btn{
+  flex:1;
+  padding:12px 0;
+  border-radius:999px;
+  border:1px solid #d0d7e2;
+  background:#ffffff;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  color:#333;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+
+.nav-btn:hover{
+  background:#eef4ff;
+}
+
+/* 현재 페이지 표시 */
+.nav-btn.active{
+  background:#007aff;
+  color:#fff;
+  border-color:#007aff;
+}
+</style>
+</head>
+<body>
+
+  <!-- 🔝 상단 네비게이션 -->
+<div class="top-nav">
+  <button class="nav-btn" data-link="/app/dashboard.html">
+    📊 대시보드
+  </button>
+  <button class="nav-btn" data-link="/app/view/barcode/purchase_list.html">
+    📋 거래 목록
+  </button>
+  <button class="nav-btn" data-link="/app/view/stock/stock_list.html">
+    📦 재고 관리
+  </button>  
+</div>
+<h3>거래 목록</h3>
+<div class="container">
+
+<!-- 기간 검색 -->
+<div class="range-box">
+  <div class="range-row">
+    <input type="date" id="range-start">
+    <input type="date" id="range-end">
+  </div>
+  <div class="range-actions">
+    <button id="btn-range">기간 조회</button>
+    <button id="btn-range-reset">초기화</button>
+  </div>
+</div>
+
+<!-- 검색 -->
+<div class="search-box">
+  <input type="text" id="search" placeholder="상품명 또는 바코드 검색">
+</div>
+
+<!-- 매입 / 매출 선택 -->
+
+<!-- 엑셀 -->
+<div class="excel-row">
+  <!-- ✅ 작은 체크 박스 -->
+  <div class="type-box">
+    <label class="type-item">
+      <input type="checkbox" id="chk-purchase" checked>
+      <span>매입</span>
+    </label>
+
+    <label class="type-item">
+      <input type="checkbox" id="chk-sale" checked>
+      <span>매출</span>
+    </label>
+  </div>
+
+  <!-- 엑셀 버튼 -->
+  <button id="btn-excel" class="excel-btn">⬇ 엑셀 다운로드</button>
+  <!-- <button class="text-btn" id="btn-stock">재고 관리</button> -->
+</div>
+
+<div id="list"></div>
+<div id="empty" class="empty" style="display:none;">저장된 거래가 없습니다.</div>
+
+</div>
+
+
+<script>
+const listEl = document.getElementById("list");
+const emptyEl = document.getElementById("empty");
+const searchEl = document.getElementById("search");
+const rangeStartEl = document.getElementById("range-start");
+const rangeEndEl = document.getElementById("range-end");
+// ✅ 매입/매출 체크박스
+const chkPurchase = document.getElementById("chk-purchase");
+const chkSale = document.getElementById("chk-sale");
+
+function n(v){ return Number(v)||0; }
+function fmt(v){ return (Number(v)||0).toLocaleString("ko-KR"); }
+
+let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
+  .map(i => ({
+    _key:"purchase_list",
+    _id:i.id,
+    type:"purchase",
+    date:i.purchaseDate,
+    name:i.name,
+    barcode:i.barcode,
+    price:n(i.price),
+    qty:n(i.qty),
+    total:n(i.price)*n(i.qty),
+    memo: i.memo || "",   // ✅ 추가
+    createdAt: i.createdAt   // ✅ 핵심
+  }));
+
+let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
+  .map(i => ({
+    _key:"sales_list",
+    _id:i.id,
+    type:"sale",
+    date:i.saleDate,
+    name:i.productName||i.name,
+    barcode:i.barcode,
+    price:n(i.price),
+    qty:n(i.qty),
+    paid:n(i.paid),
+    stockAmount:n(i.price)*n(i.qty),
+    memo: i.memo || "",   // ✅ 추가
+    createdAt: i.createdAt   // ✅ 핵심
+  }));
+
+let originList = [...purchases, ...sales];
+originList.sort((a, b) => {
+  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+});
+let viewList = [...originList];
+
+function render(data){
+  listEl.innerHTML="";
+  if(!data.length){
+    emptyEl.style.display="block";
+    return;
+  }
+  emptyEl.style.display="none";
+
+  data.forEach(it=>{
+    const div = document.createElement("div");
+    div.className = "card " + it.type;
+    div.style.cursor = "pointer";
+    div.onclick = (e) => {
+      if (e.target.classList.contains("btn-del")) return;
+      location.href = `/app/view/barcode/deal_view.html?key=${it._key}&id=${it._id}`;
+    };
+    div.innerHTML = `
+      <button class="btn-del">✕</button>
+      <span class="badge ${it.type}">${it.type==="purchase"?"매입":"매출"}</span>
+      <div class="title">${it.name}</div>
+      <div class="barcode">바코드 ${it.barcode}</div>
+      <div class="meta">${it.date}</div>
+      <div class="meta">수량 ${fmt(it.qty)} · 단가 ${fmt(it.price)}</div>
+      ${it.type==="purchase"
+        ? `<div class="amount">총액 ${fmt(it.total)} 원</div>`
+        : `<div class="meta">수금액 ${fmt(it.paid)} · 재고금액 ${fmt(it.stockAmount)}</div>`}
+      ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}  
+    `;
+
+    div.querySelector(".btn-del").onclick = ()=>{
+      if(!confirm("이 거래를 삭제할까요?")) return;
+      const raw = JSON.parse(localStorage.getItem(it._key)||"[]")
+        .filter(x => x.id !== it._id);
+      localStorage.setItem(it._key, JSON.stringify(raw));
+      originList = originList.filter(x => x._id !== it._id);
+      viewList = viewList.filter(x => x._id !== it._id);
+      render(viewList);
+    };
+
+    listEl.appendChild(div);
+  });
+}
+
+function applyFilters(){
+  const q = searchEl.value.trim();
+  const sVal = rangeStartEl.value;
+  const eVal = rangeEndEl.value;
+
+  // ✅ 날짜 비교는 문자열이 아니라 '날짜값(타임스탬프)'으로 처리 (브라우저/포맷 차이 안전)
+  const sTs = sVal ? new Date(sVal + "T00:00:00").getTime() : null;
+  const eTs = eVal ? new Date(eVal + "T23:59:59").getTime() : null;
+
+  viewList = originList.filter(it=>{
+    // ✅ 0) 매입/매출 체크 필터
+    if (it.type === "purchase" && !chkPurchase.checked) return false;
+    if (it.type === "sale" && !chkSale.checked) return false;  
+    // 1) 키워드
+    if(q){
+      if(!(it.name||"").includes(q) && !(it.barcode||"").includes(q)) return false;
+    }
+
+    // 2) 날짜 (purchaseDate/saleDate가 비어있으면 기간 필터에서 제외)
+    const dTs = it.date ? new Date(it.date + "T12:00:00").getTime() : null;
+    if(sTs !== null && (dTs === null || dTs < sTs)) return false;
+    if(eTs !== null && (dTs === null || dTs > eTs)) return false;
+
+    return true;
+  });
+
+  render(viewList);
+}
+
+searchEl.addEventListener("input", applyFilters);
+chkPurchase.addEventListener("change", applyFilters);
+chkSale.addEventListener("change", applyFilters);
+document.getElementById("btn-range").onclick = applyFilters;
+document.getElementById("btn-range-reset").onclick = ()=>{
+  rangeStartEl.value="";
+  rangeEndEl.value="";
+  searchEl.value="";
+  viewList=[...originList];
+  render(viewList);
+};
+
+document.getElementById("btn-excel").onclick = ()=>{
+  if(!viewList.length){ alert("내보낼 데이터가 없습니다."); return; }
+
+  let csv = "\uFEFF구분,날짜,상품명,바코드,수량,단가,총액/수금액,재고금액\n";
+  viewList.forEach(it=>{
+    if(it.type==="purchase"){
+      csv += `매입,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.total},\n`;
+    }else{
+      csv += `매출,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.paid},${it.stockAmount}\n`;
+    }
+  });
+
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "transaction_list.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+render(viewList);
+
+const btnStock = document.getElementById("btn-stock");
+
+if (btnStock) {
+  btnStock.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // 카드 클릭 이벤트 차단
+    location.href = "/app/view/stock/stock_list.html";
+  });
+}
+// 🔝 상단 네비 이동
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const link = btn.dataset.link;
+    if (link) location.href = link;
+  });
+});
+// ⭐ 현재 페이지 active 처리
+  const path = location.pathname;
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    const link = btn.dataset.link;
+    if (!link) return;
+
+    if (path.includes(link)) {
+      btn.classList.add("active");
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>재고 관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root{
+      --bg:#eef4ff;
+      --card:#ffffff;
+      --primary:#007aff;
+      --text:#222;
+      --sub:#667085;
+      --line:#e6e6e6;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:18px;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .container{max-width:920px;margin:0 auto;}
+
+    .header{ text-align:center; margin:10px 0 18px; }
+    .header h1{ margin:0 0 6px; font-size:22px; letter-spacing:-0.2px; }
+    .header p{ margin:0; color:var(--sub); font-size:13px; }
+
+    /* Tabs */
+    .tabs{ display:flex; gap:10px; margin:14px 0 14px; }
+    .tab{
+      flex:1;
+      border:none;
+      background:#dfe9ff;
+      color:#2b2b2b;
+      padding:13px 0;
+      border-radius:999px;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .tab.active{ background:var(--primary); color:#fff; }
+
+    /* Search */
+    .search-box{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:16px;
+      border:1px solid rgba(0,0,0,.04);
+      box-shadow:0 6px 18px rgba(0,0,0,.04);
+      margin-bottom:14px;
+    }
+    .search-label{ display:block; font-size:13px; color:var(--sub); margin-bottom:8px; }
+    .search-input{
+      width:100%;
+      padding:12px 14px;
+      font-size:15px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      outline:none;
+      background:#fbfbfb;
+    }
+    .search-input:focus{ border-color:#b8d0ff; background:#fff; }
+    .actions{ display:flex; gap:10px; margin-top:10px; }
+    .btn{
+      flex:1;
+      border:none;
+      border-radius:999px;
+      padding:12px 0;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .btn-ghost{ background:#f2f4f7; color:#222; }
+
+    /* Content */
+    .content{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      border:1px solid rgba(0,0,0,.04);
+      box-shadow:0 8px 24px rgba(0,0,0,.05);
+      min-height:240px;
+    }
+    .empty{ text-align:center; color:#8b8b8b; font-size:14px; padding:64px 0; }
+    .list{ display:flex; flex-direction:column; gap:12px; }
+
+    /* Product card */
+    .card{
+      border:1px solid #eef0f2;
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+    }
+    .card-top{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .card-title{ font-size:15px; font-weight:700; margin:0; }
+    .card-meta{ margin-top:6px; font-size:12px; color:var(--sub); }
+    .badge{
+      min-width:74px;
+      text-align:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      background:#eef4ff;
+      color:#1d4ed8;
+      border:1px solid #dbe7ff;
+    }
+    .badge.low{ background:#fff0f0; color:#b42318; border-color:#ffe0e0; }
+    .badge.warn{ background:#fff7ed; color:#b45309; border-color:#ffe2c2; }
+    .row-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+    .mini{
+      border:none;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      cursor:pointer;
+      background:#f2f4f7;
+    }
+    .mini.danger{ background:#ffecec; color:#b42318; }
+
+    /* Store card */
+    .store-head{ display:flex; justify-content:space-between; align-items:flex-start; cursor:pointer; }
+    .store-name{ font-weight:800; font-size:16px; }
+    .store-right{ text-align:right; font-size:12px; color:var(--sub); }
+    .money{ font-weight:800; font-size:13px; }
+    .money.red{ color:#b42318; }
+    .money.green{ color:#0a7d00; }
+    .store-body{ display:none; margin-top:12px; border-top:1px solid #f0f0f0; padding-top:12px; }
+    .store-row{ padding:10px 0; border-bottom:1px dashed #e5e5e5; }
+    .store-row:last-child{ border-bottom:none; }
+    .store-row .pname{ font-weight:700; }
+    .store-row .pcode{ color:var(--sub); font-size:12px; margin-top:4px; }
+    .store-row .pqty{ margin-top:6px; font-size:13px; }
+
+    /* AdSense placeholder */
+    .adsense{
+      margin:18px 0 0;
+      padding:16px;
+      border:1px dashed #c9c9c9;
+      border-radius:16px;
+      text-align:center;
+      color:#9a9a9a;
+      background:rgba(255,255,255,.55);
+      font-size:13px;
+    }
+    /* 엑셀 버튼 (거래목록과 동일 톤) */
+    .excel-btn{
+      padding:10px 14px;
+      font-size:14px;
+      border-radius:10px;
+      border:1px solid #007aff;
+      background:#eef5ff;
+      color:#007aff;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .excel-row{
+      margin:6px 0 18px;   /* ⬅️ 위로 조금 올리고, 아래 여백 확보 */
+      display:flex;
+      justify-content:flex-end;  /* 👉 오른쪽 끝으로 정확히 붙이기 */
+    }
+
+    /* 🔵 검색 라벨 가운데 정렬 */
+    .search-label{
+      text-align: center;
+    }
+
+    /* 🔵 입력값 + placeholder 가운데 정렬 */
+    .search-input{
+      text-align: center;
+    }
+
+    /* 🔵 placeholder 가운데 정렬 (브라우저별 대응) */
+    .search-input::placeholder{
+      text-align: center;
+    }
+    .search-input::-webkit-input-placeholder{
+      text-align: center;
+    }
+    .search-input:-ms-input-placeholder{
+      text-align: center;
+    }
+    /* 🔝 상단 공통 네비 */
+    .top-nav{
+      display:flex;
+      gap:10px;
+      margin:0 0 12px;   /* ⬅️ 위 여백 제거 */
+    }
+
+    .nav-btn{
+      flex:1;
+      padding:12px 0;
+      border-radius:999px;
+      border:1px solid #d0d7e2;
+      background:#ffffff;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      color:#333;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+    }
+
+    .nav-btn:hover{
+      background:#eef4ff;
+    }
+
+    /* 현재 페이지 표시 */
+    .nav-btn.active{
+      background:#007aff;
+      color:#fff;
+      border-color:#007aff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- 🔝 상단 네비게이션 -->
+    <div class="top-nav">
+      <button class="nav-btn" data-link="/app/dashboard.html">
+        📊 대시보드
+      </button>
+      <button class="nav-btn" data-link="/app/view/barcode/purchase_list.html">
+        📋 거래 목록
+      </button>
+      <button class="nav-btn" data-link="/app/view/stock/stock_list.html">
+        📦 재고 관리
+      </button>
+    </div>
+    <div class="header">
+      <h1>재고 관리</h1>
+      <p>상품별 · 거래처별 재고 현황을 한눈에</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-product" type="button">상품별 재고</button>
+      <button class="tab" id="tab-store" type="button">거래처별 현황</button>
+    </div>
+
+    <div class="search-box">
+      <label class="search-label" id="search-label">상품명 또는 바코드 검색</label>
+      <input class="search-input" id="search-input" type="text" placeholder="검색어를 입력하세요" />
+
+      <div class="actions">
+        <button class="btn btn-ghost" id="btn-clear" type="button">검색 지우기</button>
+      </div>
+    </div>
+
+    <!-- 엑셀 다운로드 (검색 지우기 바로 아래) -->
+    <div class="excel-row">
+      <button id="btn-excel" class="excel-btn">⬇ 엑셀 다운로드</button>
+    </div>
+
+    <div class="content">
+      <div class="list" id="list-box">
+        <div class="empty">데이터를 불러오는 중입니다.</div>
+      </div>
+      <div class="empty" id="empty" style="display:none;">표시할 데이터가 없습니다.</div>
+    </div>
+
+    <!-- <div class="adsense">
+      AdSense 광고 영역
+    </div> -->
+  </div>
+
+  <script src="/app/static/js/stock_list.js"></script>
+  <script>
+  // 🔝 상단 네비 이동
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const link = btn.dataset.link;
+      if (link) location.href = link;
+    });
+  });
+  // ⭐ 현재 페이지 active 처리
+  const path = location.pathname;
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    const link = btn.dataset.link;
+    if (!link) return;
+
+    if (path.includes(link)) {
+      btn.classList.add("active");
+    }
+  });
+</script>
+</body>
+</html>
