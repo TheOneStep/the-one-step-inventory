@@ -139,10 +139,7 @@ textarea { resize:vertical; min-height:60px; }
     <button id="btnStart" class="ios-pill-btn">스캔 시작</button>
   </div>
 
-  <div style="margin-top:12px;">
-    인식 결과: <span id="barcode-value">없음</span>
-  </div>
-
+  <!-- 스캔 영역: 스캔 시작 시 표시됨 -->
   <div id="scan-wrapper" style="display:none; margin-top:12px; position:relative; text-align:center;">
     <div
       id="reader"
@@ -158,7 +155,12 @@ textarea { resize:vertical; min-height:60px; }
     ></div>
     <div id="scan-sector"
       style="position:absolute;top:55%;left:50%;width:240px;height:120px;
-      transform:translate(-50%,-50%);border:2px solid #00ff88;"></div>
+      transform:translate(-50%,-50%);border:2px solid #00ff88;pointer-events:none;"></div>
+  </div>
+
+  <!-- 인식 결과: 바코드 스캔 결과를 표시하는 영역 (sales_barcode.html과 동일한 구조) -->
+  <div id="result-box" style="margin-top:12px; font-size:15px; text-align:center;">
+    인식 결과: <span id="barcode-value">없음</span>
   </div>
 
   <div id="product-form">
