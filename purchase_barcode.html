@@ -378,7 +378,7 @@ if(isIOS){
   alert("현재 아이폰에서는 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
 }else{
   const s=document.createElement("script");
-  s.src="/app/static/js/barcode_android.js?v="+Date.now();
+  s.src="barcode_android.js?v="+Date.now();
   s.onload=()=>window.initBarcodeAndroid&&window.initBarcodeAndroid();
   document.body.appendChild(s);
 }
