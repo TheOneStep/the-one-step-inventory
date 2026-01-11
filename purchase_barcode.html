@@ -187,6 +187,19 @@ document.getElementById("btnSave").onclick=()=>{
   alert("매입 등록 완료");
   location.href="purchase_list.html";
 };
+function cleanupScannerOverlay() {
+  document.querySelectorAll("video").forEach(v => {
+    v.pause && v.pause();
+    v.remove();
+  });
+  document.querySelectorAll("#reader, .barcode-overlay, canvas").forEach(el => {
+    el.remove();
+  });
+  document.body.style.overflow = "";
+}
+
+// 페이지 진입 시 무조건 정리
+window.addEventListener("pageshow", cleanupScannerOverlay);
 </script>
 
 </body>
