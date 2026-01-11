@@ -1,25 +1,112 @@
-
 <!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>매입 등록</title>
+<title>매입 바코드 등록</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{margin:0;padding:20px;background:#eef4ff;font-family:Arial}
-.box{max-width:420px;margin:0 auto;background:#eef4ff;border-radius:16px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.06)}
-h3{text-align:center;margin-bottom:14px}
-.field{margin-bottom:12px}
-label{font-size:13px;color:#555}
-input,textarea,button{width:100%;padding:10px;font-size:15px;box-sizing:border-box}
-textarea{min-height:60px}
-button{border:none;border-radius:999px;margin-top:10px}
-.btn-scan{background:#007aff;color:#fff}
-.btn-add{background:#eee}
-.btn-save{background:#007aff;color:#fff}
-.cart{margin-top:12px;font-size:14px}
-.cart-row{padding:8px 0;border-bottom:1px dashed #ddd}
 
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#eef4ff; /* 매입: 연한 파랑 */
+  margin:0;
+  padding:20px;
+  text-align:center;
+}
+.page-container {
+  max-width:420px;
+  margin:0 auto;
+  padding:0 16px 24px;
+  background:#eef4ff; /* 매입 박스 */
+}
+h1 {
+  font-size:20px;
+  margin:8px 0 16px;
+}
+.field { margin-bottom:12px; }
+.field label {
+  display:block;
+  font-size:13px;
+  margin-bottom:6px;
+  color:#333;
+}
+.field input,
+.field textarea {
+  width:100%;
+  padding:10px;
+  font-size:15px;
+  box-sizing:border-box;
+  text-align:center;
+}
+.field input[readonly] { background:#f5f5f5; }
+textarea { resize:vertical; min-height:60px; }
+
+.btn-wrap {
+  display:flex;
+  justify-content:center;
+  margin-top:12px;
+}
+.ios-pill-btn {
+  appearance:none;
+  background:#007aff;
+  color:#000;
+  border:none;
+  border-radius:999px;
+  width:100%;
+  padding:10px 22px;
+  font-size:17px;
+  font-weight:500;
+  cursor:pointer;
+}
+.ios-pill-btn:active { background:#005ecb; }
+
+.btn {
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:10px;
+}
+.btn-gray {
+  background:#f3f3f3;
+  border:1px solid #ccc;
+}
+.btn-blue {
+  background:#007aff;
+  color:#fff;
+}
+
+#product-form {
+  display:none;
+  margin-top:16px;
+  padding-top:12px;
+  border-top:1px solid #eee;
+}
+
+#cart-list {
+  margin:12px 0;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  font-size:14px;
+  text-align:left;
+  background:#fff;
+}
+#cart-list .row {
+  padding:10px 0;
+  border-bottom:1px dashed #eee;
+}
+#cart-list .row:last-child { border-bottom:none; }
+#cart-list .title { font-weight:700; }
+#cart-list .meta { color:#666; font-size:12px; }
+
+.total-box {
+  margin:10px 0;
+  font-size:16px;
+  font-weight:700;
+}
 /* =========================
    입력 필드 카드 스타일 (매입)
    ========================= */
@@ -40,175 +127,261 @@ button{border:none;border-radius:999px;margin-top:10px}
 </head>
 
 <body>
-<div class="box">
-<h3 id="title">매입 등록</h3>
+<div class="page-container">
+  <h1>매입 바코드 등록</h1>
 
-<div class="field">
-<label>매입일자</label>
-<input type="date" id="date">
+  <div class="field">
+    <label>매입일자</label>
+    <input type="date" id="purchaseDate">
+  </div>
+
+  <div class="btn-wrap">
+    <button id="btnStart" class="ios-pill-btn">스캔 시작</button>
+  </div>
+
+  <div style="margin-top:12px;">
+    인식 결과: <span id="barcode-value">없음</span>
+  </div>
+
+  <div id="scan-wrapper" style="display:none; margin-top:12px; position:relative; text-align:center;">
+    <div
+      id="reader"
+      style="
+        width:100%;
+        max-width:420px;
+        height:320px;
+        background:#000;
+        border-radius:12px;
+        overflow:hidden;
+        margin:0 auto;
+      "
+    ></div>
+    <div id="scan-sector"
+      style="position:absolute;top:55%;left:50%;width:240px;height:120px;
+      transform:translate(-50%,-50%);border:2px solid #00ff88;"></div>
+  </div>
+
+  <div id="product-form">
+
+    <div class="field">
+      <label>바코드</label>
+      <input id="input-barcode" readonly>
+    </div>
+
+    <div class="field">
+      <label>상품명</label>
+      <input id="input-name">
+    </div>
+
+    <div class="field">
+      <label>가격</label>
+      <input id="price" inputmode="numeric">
+    </div>
+
+    <div class="field">
+      <label>수량</label>
+      <input id="qty" inputmode="numeric">
+    </div>
+
+    <div class="field">
+      <label>메모</label>
+      <textarea id="memo"></textarea>
+    </div>
+
+    <div id="cart-list"></div>
+
+    <div class="total-box">
+      총액: <span id="total-amount">0</span> 원
+    </div>
+
+    <button id="btnAddToCart" class="btn btn-gray">추가</button>
+    <button id="btnSaveAll" class="btn btn-blue">전체 등록</button>
+  </div>
 </div>
 
-<button class="btn-scan" id="btnScan">바코드 스캔</button>
-
-<div class="field">
-<label>바코드</label>
-<input id="barcode">
-</div>
-
-<div class="field">
-<label>상품명</label>
-<input id="name">
-</div>
-
-<div class="field">
-<label>단가</label>
-<input id="price">
-</div>
-
-<div class="field">
-<label>수량</label>
-<input id="qty">
-</div>
-
-<div class="field">
-<label>메모</label>
-<textarea id="memo"></textarea>
-</div>
-
-<div class="cart" id="cart"></div>
-
-<button class="btn-add" id="btnAdd">추가</button>
-<button class="btn-save" id="btnSave">저장</button>
-</div>
+<script src="static/js/product_master.js"></script>
 
 <script>
-// ✅ 숫자 콤마 표시용 (화면 출력 전용)
-function fmt(v) {
-  return (Number(v) || 0).toLocaleString("ko-KR");
+function parseNumber(v){
+  return Number(String(v||"").replace(/,/g,""))||0;
 }
-// ✅ 콤마 제거 (저장용)
-function uncomma(v){
-  return String(v || "").replace(/,/g, "");
-}    
+function formatNumber(v){
+  return (Number(v)||0).toLocaleString("ko-KR");
+}
+function rand6(){
+  return Math.random().toString(36).slice(2,8);
+}
 
-const dateEl = document.getElementById("date");
-const barcodeEl = document.getElementById("barcode");
-const nameEl = document.getElementById("name");
+const dateEl = document.getElementById("purchaseDate");
+const barcodeSpan = document.getElementById("barcode-value");
+const formEl = document.getElementById("product-form");
+
+const barcodeEl = document.getElementById("input-barcode");
+const nameEl = document.getElementById("input-name");
 const priceEl = document.getElementById("price");
 const qtyEl = document.getElementById("qty");
 const memoEl = document.getElementById("memo");
-const cartEl = document.getElementById("cart");
-const titleEl = document.getElementById("title");
 
-// ✅ [스캔] 버튼 클릭 연결 (지금은 함수가 없어서 alert만 뜸)
-// barcode_android.js 연동을 붙이면 여기서 카메라가 열리게 됨
-let scannerLoaded = false;
+const cartBox = document.getElementById("cart-list");
+const totalEl = document.getElementById("total-amount");
 
-btnScan.addEventListener("click", () => {
-  const ua = navigator.userAgent;
-  const isIOS =
-    /iPhone|iPad|iPod/i.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const btnAdd = document.getElementById("btnAddToCart");
+const btnSaveAll = document.getElementById("btnSaveAll");
 
-  if (isIOS) {
-    alert("아이폰은 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
-    return;
-  }
-
-  if (scannerLoaded) {
-    alert("카메라가 이미 활성화되어 있습니다.\n바코드를 비춰주세요.");
-    return;
-  }
-
-  const script = document.createElement("script");
-  script.src = "static/js/barcode_android.js?v=" + Date.now();
-  script.onload = () => {
-    if (window.initBarcodeAndroid) {
-      window.initBarcodeAndroid({
-        onDetected(code) {
-          barcodeEl.value = code;
-        }
-      });
-      scannerLoaded = true;
-    }
-  };
-  document.body.appendChild(script);
-});
-
-let cart = [];
-
-(function initDate(){
+(function setToday(){
   dateEl.value = new Date().toLocaleDateString("sv-SE");
 })();
 
-function render(){
-  cartEl.innerHTML="";
-  cart.forEach(i=>{
-    cartEl.innerHTML+=`
-      <div class="cart-row">
-        ${i.name} / ${fmt(i.qty)} × ${fmt(i.price)}
-      </div>`;
+[priceEl, qtyEl].forEach(el=>{
+  el.addEventListener("blur",()=>{
+    const v=parseNumber(el.value);
+    el.value=v?formatNumber(v):"";
   });
-}
+});
 
-document.getElementById("btnAdd").onclick=()=>{
-  if(!barcodeEl.value) return alert("바코드 없음");
-  cart=[{
-    barcode:barcodeEl.value,
-    name:nameEl.value,
-    price:Number(priceEl.value),
-    qty:Number(qtyEl.value),
-    memo:memoEl.value
-  }];
-  render();
+const CART_KEY="purchase_cart_tmp";
+const purchaseCart={
+  items:[],
+  load(){
+    try{ this.items=JSON.parse(localStorage.getItem(CART_KEY)||"[]"); }
+    catch(e){ this.items=[]; }
+  },
+  save(){ localStorage.setItem(CART_KEY,JSON.stringify(this.items)); },
+  add(it){
+  // ✅ 같은 상품 판별 기준 (기본: 바코드 + 가격)
+  //    - 바코드만으로 합치고 싶으면 (x.barcode === it.barcode)만 남기면 됨
+  const idx = this.items.findIndex(x => x.barcode === it.barcode);
+
+  if (idx >= 0) {
+    // ✅ 이미 있으면 수량만 합산
+    this.items[idx].qty = (Number(this.items[idx].qty) || 0) + (Number(it.qty) || 0);
+
+    // ✅ 이름이 비어있던 경우만 채움(안전)
+    if (!this.items[idx].name && it.name) {
+      this.items[idx].name = it.name;
+    }
+
+    // ✅ 메모는 선택: 둘 다 있으면 줄바꿈으로 합침
+    if (it.memo) {
+      const prev = (this.items[idx].memo || "").trim();
+      this.items[idx].memo = prev ? (prev + "\\n" + it.memo) : it.memo;
+    }
+  } else {
+    // ✅ 없으면 새로 추가
+    this.items.push(it);
+  }
+
+  this.save();
+  this.render();
+},
+  clear(){
+    this.items=[];
+    this.save();
+    this.render();
+  },
+  render(){
+    if(!this.items.length){
+      cartBox.innerHTML="<div class='meta'>아직 추가된 항목이 없습니다.</div>";
+      totalEl.textContent="0";
+      return;
+    }
+    let html="", total=0;
+    this.items.forEach((it,idx)=>{
+      const amt=(it.price||0)*(it.qty||0);
+      total+=amt;
+      html+=`
+      <div class="row">
+        <div class="title">${idx+1}. ${it.name} (${it.barcode})</div>
+        <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)} | 금액 ${formatNumber(amt)}</div>
+        ${it.memo?`<div class="meta">메모: ${it.memo}</div>`:""}
+      </div>`;
+    });
+    cartBox.innerHTML=html;
+    totalEl.textContent=formatNumber(total);
+  }
 };
 
-document.getElementById("btnSave").onclick=()=>{
-  let list=JSON.parse(localStorage.getItem("purchase_list")||"[]");
-  // ✅ 수정/저장 시 cart를 input 값으로 강제 동기화
-  cart = [{
-  barcode: barcodeEl.value,
-  name: nameEl.value,
-  price: Number(uncomma(priceEl.value)),
-  qty: Number(uncomma(qtyEl.value)),
-  memo: memoEl.value
-  }];
+purchaseCart.load();
+purchaseCart.render();
 
+const observer=new MutationObserver(()=>{
+  const code=barcodeSpan.textContent.trim();
+  if(!code||code==="없음") return;
+  barcodeEl.value=code;
+  formEl.style.display="block";
 
+  if(window.ProductMaster){
+    const m=ProductMaster.get(code);
+    if(m){
+      if(!nameEl.value) nameEl.value=m.name||"";
+      if(!priceEl.value && m.price) priceEl.value=formatNumber(m.price);
+    }
+  }
+});
+observer.observe(barcodeSpan,{childList:true});
 
+btnAdd.addEventListener("click",()=>{
+  const item={
+    barcode:barcodeEl.value.trim(),
+    name:nameEl.value.trim(),
+    price:parseNumber(priceEl.value),
+    qty:parseNumber(qtyEl.value),
+    memo:memoEl.value.trim()
+  };
+  if(!item.barcode||!item.name){ alert("바코드와 상품명은 필수입니다."); return; }
+  if(item.qty<=0){ alert("수량은 1 이상이어야 합니다."); return; }
+
+  purchaseCart.add(item);
+
+  if(window.ProductMaster){
+    ProductMaster.set(item.barcode,{name:item.name,price:item.price});
+  }
+
+  barcodeEl.value="";
+  nameEl.value="";
+  priceEl.value="";
+  qtyEl.value="";
+  memoEl.value="";
+  barcodeSpan.textContent="없음";
+});
+
+btnSaveAll.addEventListener("click",()=>{
+  if(!purchaseCart.items.length){
+    alert("등록할 항목이 없습니다.");
+    return;
+  }
+  const list=JSON.parse(localStorage.getItem("purchase_list")||"[]");
+  purchaseCart.items.forEach(it=>{
     list.push({
-      id:"p_"+Date.now(),
+      id:"p_"+Date.now()+"_"+rand6(),
       purchaseDate:dateEl.value,
-      ...cart[0],
+      barcode:it.barcode,
+      name:it.name,
+      price:it.price,
+      qty:it.qty,
+      memo:it.memo,
       createdAt:new Date().toISOString()
     });
-
+  });
   localStorage.setItem("purchase_list",JSON.stringify(list));
-  // ✅ 저장 후 입력값 초기화 (브라우저 폼 복원 방지)
-  barcodeEl.value = "";
-  nameEl.value = "";
-  priceEl.value = "";
-  qtyEl.value = "";
-  memoEl.value = "";
-  cart = [];
-  cartEl.innerHTML = "";
-  alert("매입 등록 완료");
-  location.href="purchase_list.html";
-};
-function cleanupScannerOverlay() {
-  document.querySelectorAll("video").forEach(v => {
-    v.pause && v.pause();
-    v.remove();
-  });
-  document.querySelectorAll("#reader, .barcode-overlay, canvas").forEach(el => {
-    el.remove();
-  });
-  document.body.style.overflow = "";
-}
+  purchaseCart.clear();
+  alert("매입이 모두 등록되었습니다.");
+  location.href = "purchase_list.html";
+});
 
-// 페이지 진입 시 무조건 정리
-window.addEventListener("pageshow", cleanupScannerOverlay);
 </script>
 
+<script>
+const ua=navigator.userAgent;
+const isIOS=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+if(isIOS){
+  alert("현재 아이폰에서는 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
+}else{
+  const s=document.createElement("script");
+  s.src="static/js/barcode_android.js?v="+Date.now();
+  s.onload=()=>window.initBarcodeAndroid&&window.initBarcodeAndroid();
+  document.body.appendChild(s);
+}
+</script>
 </body>
 </html>
