@@ -372,25 +372,24 @@ btnSaveAll.addEventListener("click",()=>{
 </script>
 
 <script>
-const ua=navigator.userAgent;
-const isIOS=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-if(isIOS){
+const ua = navigator.userAgent;
+const isIOS =
+  /iPhone|iPad|iPod/i.test(ua) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+if (isIOS) {
   alert("현재 아이폰에서는 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
-}else{
-  const s=document.createElement("script");
-  s.src="barcode_android.js?v="+Date.now();
+} else {
+  const s = document.createElement("script");
+  s.src = "barcode_android.js?v=" + Date.now();
   s.onload = () => {
-  if (window.initBarcodeAndroid) {
-    window.initBarcodeAndroid({
-      onDetected(code){
-        const el = document.getElementById("barcode-value");
-        if (el) {
-          el.textContent = code;
-        }
-      }
-    });
-  }
-};
+    if (window.initBarcodeAndroid) {
+      // ✅ 납품과 동일한 방식
+      window.initBarcodeAndroid();
+    } else {
+      alert("barcode_android 초기화 함수가 없습니다.");
+    }
+  };
   document.body.appendChild(s);
 }
 </script>
