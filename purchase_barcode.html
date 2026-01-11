@@ -5,9 +5,6 @@
 <meta charset="utf-8">
 <title>매입 등록</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>
-alert("현재 URL:\n" + location.href);
-</script>
 <style>
 body{margin:0;padding:20px;background:#eef4ff;font-family:Arial}
 .box{max-width:420px;margin:0 auto;background:#eef4ff;border-radius:16px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.06)}
@@ -114,7 +111,12 @@ const titleEl = document.getElementById("title");
 // barcode_android.js 연동을 붙이면 여기서 카메라가 열리게 됨
 const btnScan = document.getElementById("btnScan");
 btnScan.addEventListener("click", () => {
-  alert("수정에서는 바코드를 이용하실 수 없습니다.");
+  if (editMode) {
+    alert("수정에서는 바코드를 이용하실 수 없습니다.");
+  } else {
+    // 등록 모드: 실제 스캔 시작 안내
+    alert("카메라가 열립니다. 바코드를 비춰주세요.");
+  }
 });
 
 let cart = [];
