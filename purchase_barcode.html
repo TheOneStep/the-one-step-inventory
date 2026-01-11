@@ -90,13 +90,6 @@ function fmt(v) {
 function uncomma(v){
   return String(v || "").replace(/,/g, "");
 }    
-const params = new URLSearchParams(location.search);
-const editMode = params.get("mode")==="edit" && params.get("id");
-const editId = params.get("id");
-// ✅ 수정 모드에서는 [추가] 버튼 숨김
-if (editMode) {
-  document.getElementById("btnAdd").style.display = "none";
-}
 
 const dateEl = document.getElementById("date");
 const barcodeEl = document.getElementById("barcode");
@@ -112,11 +105,6 @@ const titleEl = document.getElementById("title");
 let scannerLoaded = false;
 
 btnScan.addEventListener("click", () => {
-  if (editMode) {
-    alert("수정에서는 바코드를 이용하실 수 없습니다.");
-    return;
-  }
-
   const ua = navigator.userAgent;
   const isIOS =
     /iPhone|iPad|iPod/i.test(ua) ||
@@ -150,7 +138,6 @@ btnScan.addEventListener("click", () => {
 let cart = [];
 
 (function initDate(){
-  if (editMode) return; // 수정 모드면 기존 날짜 유지
   dateEl.value = new Date().toLocaleDateString("sv-SE");
 })();
 
@@ -176,28 +163,6 @@ document.getElementById("btnAdd").onclick=()=>{
   render();
 };
 
-if(editMode && editId){
-  titleEl.textContent="매입 수정";
-  const list=JSON.parse(localStorage.getItem("purchase_list")||"[]");
-  const item=list.find(i=>i.id===editId);
-  if(item){
-    dateEl.value=item.purchaseDate;
-    barcodeEl.value=item.barcode;
-    nameEl.value=item.name;
-    priceEl.value = fmt(item.price);
-    qtyEl.value = fmt(item.qty);
-    memoEl.value=item.memo||"";
-    cart=[{
-      barcode:item.barcode,
-      name:item.name,
-      price:item.price,
-      qty:item.qty,
-      memo:item.memo||""
-    }];
-    render();
-  }
-}
-
 document.getElementById("btnSave").onclick=()=>{
   let list=JSON.parse(localStorage.getItem("purchase_list")||"[]");
   // ✅ 수정/저장 시 cart를 input 값으로 강제 동기화
@@ -210,24 +175,16 @@ document.getElementById("btnSave").onclick=()=>{
   }];
 
 
-  if(editMode){
-    list=list.map(i=>i.id===editId?{
-      ...i,
-      purchaseDate:dateEl.value,
-      ...cart[0],
-      updatedAt:new Date().toISOString()
-    }:i);
-  }else{
+
     list.push({
       id:"p_"+Date.now(),
       purchaseDate:dateEl.value,
       ...cart[0],
       createdAt:new Date().toISOString()
     });
-  }
 
   localStorage.setItem("purchase_list",JSON.stringify(list));
-  alert(editMode?"매입 수정 완료":"매입 등록 완료");
+  alert("매입 등록 완료");
   location.href="barcode/purchase_list.html";
 };
 </script>
