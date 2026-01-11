@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>매입 등록</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;padding:20px;background:#eef4ff;font-family:Arial}
+.box{max-width:420px;margin:0 auto;background:#eef4ff;border-radius:16px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.06)}
+h3{text-align:center;margin-bottom:14px}
+.field{margin-bottom:12px}
+label{font-size:13px;color:#555}
+input,textarea,button{width:100%;padding:10px;font-size:15px;box-sizing:border-box}
+textarea{min-height:60px}
+button{border:none;border-radius:999px;margin-top:10px}
+.btn-scan{background:#007aff;color:#fff}
+.btn-add{background:#eee}
+.btn-save{background:#007aff;color:#fff}
+.cart{margin-top:12px;font-size:14px}
+.cart-row{padding:8px 0;border-bottom:1px dashed #ddd}
+
+/* =========================
+   입력 필드 카드 스타일 (매입)
+   ========================= */
+.field input,
+.field textarea {
+  background: #ffffff;          /* 흰 카드 */
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* 읽기 전용 필드는 살짝 톤 다운 */
+.field input[readonly] {
+  background: #f7f7f7;
+  box-shadow: none;
+}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h3 id="title">매입 등록</h3>
+
+<div class="field">
+<label>매입일자</label>
+<input type="date" id="date">
+</div>
+
+<button class="btn-scan" id="btnScan">바코드 스캔</button>
+
+<div class="field">
+<label>바코드</label>
+<input id="barcode">
+</div>
+
+<div class="field">
+<label>상품명</label>
+<input id="name">
+</div>
+
+<div class="field">
+<label>단가</label>
+<input id="price">
+</div>
+
+<div class="field">
+<label>수량</label>
+<input id="qty">
+</div>
+
+<div class="field">
+<label>메모</label>
+<textarea id="memo"></textarea>
+</div>
+
+<div class="cart" id="cart"></div>
+
+<button class="btn-add" id="btnAdd">추가</button>
+<button class="btn-save" id="btnSave">저장</button>
+</div>
+
+<script>
+// ✅ 숫자 콤마 표시용 (화면 출력 전용)
+function fmt(v) {
+  return (Number(v) || 0).toLocaleString("ko-KR");
+}
+// ✅ 콤마 제거 (저장용)
+function uncomma(v){
+  return String(v || "").replace(/,/g, "");
+}    
+const params = new URLSearchParams(location.search);
+const editMode = params.get("mode")==="edit";
+const editId = params.get("id");
+// ✅ 수정 모드에서는 [추가] 버튼 숨김
+if (editMode) {
+  document.getElementById("btnAdd").style.display = "none";
+}
+
+const dateEl = document.getElementById("date");
+const barcodeEl = document.getElementById("barcode");
+const nameEl = document.getElementById("name");
+const priceEl = document.getElementById("price");
+const qtyEl = document.getElementById("qty");
+const memoEl = document.getElementById("memo");
+const cartEl = document.getElementById("cart");
+const titleEl = document.getElementById("title");
+
+// ✅ [스캔] 버튼 클릭 연결 (지금은 함수가 없어서 alert만 뜸)
+// barcode_android.js 연동을 붙이면 여기서 카메라가 열리게 됨
+const btnScan = document.getElementById("btnScan");
+btnScan.addEventListener("click", () => {
+  alert("수정에서는 바코드를 이용하실 수 없습니다.");
+});
+
+let cart = [];
+
+(function initDate(){
+  if (editMode) return; // 수정 모드면 기존 날짜 유지
+  dateEl.value = new Date().toLocaleDateString("sv-SE");
+})();
+
+function render(){
+  cartEl.innerHTML="";
+  cart.forEach(i=>{
+    cartEl.innerHTML+=`
+      <div class="cart-row">
+        ${i.name} / ${fmt(i.qty)} × ${fmt(i.price)}
+      </div>`;
+  });
+}
+
+document.getElementById("btnAdd").onclick=()=>{
+  if(!barcodeEl.value) return alert("바코드 없음");
+  cart=[{
+    barcode:barcodeEl.value,
+    name:nameEl.value,
+    price:Number(priceEl.value),
+    qty:Number(qtyEl.value),
+    memo:memoEl.value
+  }];
+  render();
+};
+
+if(editMode && editId){
+  titleEl.textContent="매입 수정";
+  const list=JSON.parse(localStorage.getItem("purchase_list")||"[]");
+  const item=list.find(i=>i.id===editId);
+  if(item){
+    dateEl.value=item.purchaseDate;
+    barcodeEl.value=item.barcode;
+    nameEl.value=item.name;
+    priceEl.value = fmt(item.price);
+    qtyEl.value = fmt(item.qty);
+    memoEl.value=item.memo||"";
+    cart=[{
+      barcode:item.barcode,
+      name:item.name,
+      price:item.price,
+      qty:item.qty,
+      memo:item.memo||""
+    }];
+    render();
+  }
+}
+
+document.getElementById("btnSave").onclick=()=>{
+  let list=JSON.parse(localStorage.getItem("purchase_list")||"[]");
+  // ✅ 수정/저장 시 cart를 input 값으로 강제 동기화
+  cart = [{
+  barcode: barcodeEl.value,
+  name: nameEl.value,
+  price: Number(uncomma(priceEl.value)),
+  qty: Number(uncomma(qtyEl.value)),
+  memo: memoEl.value
+  }];
+
+
+  if(editMode){
+    list=list.map(i=>i.id===editId?{
+      ...i,
+      purchaseDate:dateEl.value,
+      ...cart[0],
+      updatedAt:new Date().toISOString()
+    }:i);
+  }else{
+    list.push({
+      id:"p_"+Date.now(),
+      purchaseDate:dateEl.value,
+      ...cart[0],
+      createdAt:new Date().toISOString()
+    });
+  }
+
+  localStorage.setItem("purchase_list",JSON.stringify(list));
+  alert(editMode?"매입 수정 완료":"매입 등록 완료");
+  location.href="/app/view/barcode/purchase_list.html";
+};
+</script>
+<script>
+const ua = navigator.userAgent;
+const isIOS =
+  /iPhone|iPad|iPod/i.test(ua) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+if (isIOS) {
+  alert("아이폰은 바코드 스캔을 지원하지 않습니다.");
+} else {
+  const script = document.createElement("script");
+  script.src = "/app/static/js/barcode_android.js?v=" + Date.now();
+  script.onload = () => {
+    if (window.initBarcodeAndroid) {
+      window.initBarcodeAndroid({
+        onDetected(code){
+          barcodeEl.value = code;
+        }
+      });
+    }
+  };
+  document.body.appendChild(script);
+}
+</script>
+</body>
+</html>

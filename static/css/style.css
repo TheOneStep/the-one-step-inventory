@@ -1,0 +1,233 @@
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 20px;
+}
+
+#reader {
+  display: none;          /* ⭐ 핵심 */
+  width: 100%;
+  max-width: 420px;
+  height: 320px;
+  margin: 12px auto;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#result {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.ios-pill-btn {
+  appearance: none;
+  -webkit-appearance: none;
+
+  background-color: #f2f2f7;   /* iOS 연회색 */
+  color: #007aff;              /* iOS 파란색 */
+  
+  border: none;
+  border-radius: 999px;
+
+  padding: 10px 22px;
+  font-size: 17px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.ios-pill-btn:active {
+  background-color: #e5e5ea;
+}
+
+/* 전체 모바일 컨테이너 */
+.page-container {
+  max-width: 420px;        /* 📱 모바일 최적 폭 */
+  margin: 0 auto;          /* 가운데 정렬 */
+  padding: 0 16px 24px;    /* 좌우 여백 */
+  box-sizing: border-box;
+}
+
+/* input, button 공통 */
+input,
+button {
+  width: 100%;
+  box-sizing: border-box;  /* ⭐ 삐져나옴 방지 핵심 */
+}
+
+/* input 글자 왼쪽 정렬 */
+input {
+  text-align: left;
+}
+
+/* 입력 필드 간격 */
+#product-form > div {
+  margin-bottom: 14px;
+}
+
+.purchase-date-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.purchase-date-wrap label {
+  font-size: 14px;
+  color: #333;
+}
+
+.purchase-date-wrap input[type="date"] {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* DASHBOARD */
+#dashboard {
+  margin: 20px auto;
+  max-width: 420px;
+}
+
+.dash-header {
+  margin-bottom: 16px;
+}
+
+.dash-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.dash-sub {
+  font-size: 12px;
+  color: #888;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.kpi-card .label {
+  font-size: 12px;
+  color: #666;
+}
+
+.kpi-card .value {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 6px;
+}
+
+.top5-wrap {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 20px;
+}
+
+.top5-header {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.top5-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.top5-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.top5-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.top5-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #eee;
+}
+
+.top5-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.top5-rank {
+  font-size: 12px;
+  color: #888;
+}
+
+.top5-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.top5-amount {
+  font-size: 16px;
+  font-weight: bold;
+  color: #111;
+}
+
+.section-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+/* KPI 카드랑 동일한 컨테이너 느낌 */
+.kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Top5 카드 */
+.top5-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+
+.top5-rank {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.top5-name {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.top5-amount {
+  font-size: 16px;
+  font-weight: bold;
+}  

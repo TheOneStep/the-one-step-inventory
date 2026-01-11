@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>거래 상세</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f6f7f9;margin:0;padding:20px}
+.box{max-width:420px;margin:0 auto;background:#fff;border-radius:16px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,.06)}
+h3{text-align:center;margin-bottom:12px}
+.row{margin-bottom:8px;font-size:14px}
+.label{color:#777;font-size:12px}
+.value{font-weight:600}
+.btn{width:100%;padding:12px;border-radius:999px;border:none;font-size:15px;margin-top:12px}
+.btn-edit{background:#007aff;color:#fff}
+/* ✅ 거래 타입별 배경 (리스트와 동일) */
+.box.purchase {
+  background: #eef4ff;
+}
+
+.box.sale {
+  background: #fff0f0;
+}
+</style>
+</head>
+<body>
+<div class="box" id="box"></div>
+
+<script>
+// ✅ 숫자 콤마 표시용 (화면 출력 전용)
+function fmt(v) {
+  return (Number(v) || 0).toLocaleString("ko-KR");
+}  
+const params = new URLSearchParams(location.search);
+const key = params.get("key");
+const id = params.get("id");
+const box = document.getElementById("box");
+
+if (!key || !id) {
+  box.innerHTML = "<p>잘못된 접근입니다.</p>";
+} else {
+
+  const list = JSON.parse(localStorage.getItem(key) || "[]");
+  const item = list.find(i => i.id === id);
+
+  // ✅ 거래 타입에 따라 배경색 적용 (리스트와 동일)
+  if (key === "purchase_list") {
+    box.classList.add("purchase");
+  } else if (key === "sales_list") {
+    box.classList.add("sale");
+  }
+
+  if (!item) {
+    box.innerHTML = "<p>데이터를 찾을 수 없습니다.</p>";
+  } else {
+
+    /* ======================
+       🟦 매입 상세
+    ====================== */
+    if (key === "purchase_list") {
+      box.innerHTML = `
+        <h3>매입 상세</h3>
+
+        <div class="row"><div class="label">상품명</div><div class="value">${item.name || ""}</div></div>
+        <div class="row"><div class="label">바코드</div><div class="value">${item.barcode || ""}</div></div>
+        <div class="row"><div class="label">매입일자</div><div class="value">${item.purchaseDate || ""}</div></div>
+        <div class="row"><div class="label">수량</div><div class="value">${fmt(item.qty)}</div></div>
+        <div class="row"><div class="label">단가</div><div class="value">${fmt(item.price)}</div></div>
+        <div class="row"><div class="label">총액</div><div class="value">${fmt(item.price * item.qty)}</div></div>
+
+        ${item.memo ? `
+          <div class="row">
+            <div class="label">메모</div>
+            <div class="value">${item.memo}</div>
+          </div>` : ""
+        }
+
+        <button class="btn btn-edit" onclick="goEdit()">수정</button>
+      `;
+    }
+
+    /* ======================
+       🟥 납품(매출) 상세
+    ====================== */
+    else if (key === "sales_list") {
+      box.innerHTML = `
+        <h3>납품 상세</h3>
+
+        <div class="row"><div class="label">상품명</div><div class="value">${item.productName || item.name || ""}</div></div>
+        <div class="row"><div class="label">바코드</div><div class="value">${item.barcode || ""}</div></div>
+        <div class="row"><div class="label">납품일자</div><div class="value">${item.saleDate || ""}</div></div>
+        <div class="row"><div class="label">거래처</div><div class="value">${item.partner || ""}</div></div>
+        <div class="row"><div class="label">수량</div><div class="value">${fmt(item.qty)}</div></div>
+        <div class="row"><div class="label">단가</div><div class="value">${fmt(item.price)}</div></div>
+        <div class="row"><div class="label">수금액</div><div class="value">${fmt(item.paid)}</div></div>
+        <div class="row"><div class="label">재고금액</div><div class="value">${fmt(item.price * item.qty)}</div></div>
+
+        ${item.memo ? `
+          <div class="row">
+            <div class="label">메모</div>
+            <div class="value">${item.memo}</div>
+          </div>` : ""
+        }
+
+        <button class="btn btn-edit" onclick="goEdit()">수정</button>
+      `;
+    }
+
+  } // ← item else 닫힘
+}   // ← key/id else 닫힘
+
+function goEdit() {
+  // 🟦 매입
+  if (key === "purchase_list") {
+    location.href =
+      "purchase_barcode_edit.html?mode=edit&id=" + id;
+  }
+
+  // 🟥 납품(매출)
+  else if (key === "sales_list") {
+    location.href =
+      "sales_barcode_edit.html?mode=edit&id=" + id;
+  }
+}
+</script>
+
+</body>
+</html>

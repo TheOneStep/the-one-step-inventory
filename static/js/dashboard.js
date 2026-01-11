@@ -480,13 +480,13 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================
 
 function goPurchase() {
-  location.href = "view/barcode/purchase_barcode.html";
+  location.href = "purchase_barcode.html";
 }
 
 function goSale() {
-  location.href = "view/barcode/sales_barcode.html";
+  location.href = "sales_barcode.html";
 }
 
 function goList() {
-  location.href = "view/barcode/purchase_list.html";
+  location.href = "purchase_list.html";
 }

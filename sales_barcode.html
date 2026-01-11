@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>매출 바코드 등록</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff0f0; /* 납품: 연한 빨강 */
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .page-container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 0 16px 24px;
+      box-sizing: border-box;
+      background: #fff0f0; /* 납품 박스 */
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 8px 0 16px;
+      text-align: center;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: #333;
+      text-align: center;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .field input[readonly] {
+      background: #f5f5f5;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    /* ===== 매입과 동일한 스캔 버튼 스타일 ===== */
+    .btn-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .ios-pill-btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: #007aff;
+      color: #000;
+      border: none;
+      border-radius: 999px;
+      width: 100%;
+      padding: 12px 0;
+      padding: 10px 22px;
+      font-size: 17px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .ios-pill-btn:active { background-color: #005ecb; }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-gray {
+      background: #f3f3f3;
+      border: 1px solid #ccc;
+    }
+
+    .btn-blue {
+      background: #007aff;
+      color: #fff;
+    }
+
+    /* 🔒 스캔 전에는 상품 입력 폼 숨김 */
+    #product-form {
+      display: none;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    /* 📦 카트 표시 영역 (매입과 유사) */
+    #cart-list {
+      margin: 12px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: left;
+      background: #fff;
+    }
+    #cart-list .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding: 10px 0;
+      border-bottom: 1px dashed #eee;
+    }
+    #cart-list .row:last-child { border-bottom: none; }
+    #cart-list .meta { color:#666; font-size: 12px; }
+    #cart-list .title { font-weight: 700; }
+
+    #save-count {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #333;
+      display: none;
+    }
+    /* =========================
+      입력 필드 카드 스타일 (납품)
+      ========================= */
+    .field input,
+    .field textarea {
+      background: #ffffff;          /* 흰 카드 */
+      border: 1px solid #e2e2e2;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    /* 읽기 전용 필드는 살짝 톤 다운 */
+    .field input[readonly] {
+      background: #f7f7f7;
+      box-shadow: none;
+    }
+    
+  </style>
+</head>
+
+<body>
+  <div class="page-container">
+    <h1>납품 바코드 등록</h1>
+
+    <!-- 1) 납품일자 -->
+    <div class="field">
+      <label>납품일자</label>
+      <input type="date" id="saleDate">
+    </div>
+
+    <!-- 2) 거래처 -->
+    <div class="field">
+      <label>거래처</label>
+      <input type="text" id="partner" placeholder="거래처명">
+    </div>
+
+    <!-- 3) 바코드 스캔 버튼 -->
+    <div class="btn-wrap">
+      <button id="btnStart" class="ios-pill-btn">스캔 시작</button>
+    </div>
+
+    <!-- 4) 스캔 영역 -->
+    <div id="scan-wrapper" style="display:none; margin-top:12px; position:relative;">
+      <div
+        id="reader"
+        style="
+          width:100%;
+          max-width:420px;
+          height:320px;
+          background:#000;
+          border-radius:12px;
+          overflow:hidden;
+          margin:0 auto;
+        "
+      ></div>
+
+      <div
+        id="scan-sector"
+        style="
+          position:absolute;
+          top:55%;
+          left:50%;
+          width:240px;
+          height:120px;
+          transform:translate(-50%, -50%);
+          border:2px solid #00ff88;
+          pointer-events:none;
+        "
+      ></div>
+    </div>
+
+    <!-- 5) 인식 결과 -->
+    <div id="result-box" style="margin-top:12px; font-size:15px; text-align:center;">
+      인식 결과: <span id="barcode-value">없음</span>
+    </div>
+
+    <!-- 6) 스캔 후 열리는 입력 영역 -->
+    <div id="product-form">
+
+      <!-- 저장된 매출 개수 표시 (전체 등록 후 업데이트) -->
+      <div id="save-count">
+        <b>저장된 매출:</b> <b id="save-count-num">0</b>건
+      </div>
+
+      <div class="field">
+        <label>바코드</label>
+        <input type="text" id="input-barcode" readonly>
+      </div>
+
+      <div class="field">
+        <label>상품명</label>
+        <input type="text" id="input-name" placeholder="예: 양배추">
+      </div>
+
+      <div class="field">
+        <label>가격</label>
+        <input type="text" id="price" inputmode="numeric" placeholder="예: 2,500">
+      </div>
+
+      <div class="field">
+        <label>수량</label>
+        <input type="text" id="qty" inputmode="numeric" placeholder="">
+      </div>
+
+      <div class="field">
+        <label>수금액</label>
+        <input type="text" id="paid" inputmode="numeric" placeholder="">
+      </div>
+
+      <div class="field">
+        <label>재고금액</label>
+        <input type="text" id="stockAmount" inputmode="numeric" placeholder="" readonly>
+      </div>
+
+      <div class="field">
+        <label>메모</label>
+        <textarea id="memo" placeholder=""></textarea>
+      </div>
+
+      <!-- ✅ 누적 표시 영역 -->
+      <div id="cart-list"></div>
+
+      <!-- ✅ 누적 추가/저장 버튼 -->
+      <button id="btnAddToCart" class="btn btn-gray">추가</button>
+      <button id="btnSaveAll" class="btn btn-blue">전체 등록</button>
+    </div>
+  </div>
+
+  <!-- ✅ 상품명/가격 기억(매입과 동일하게 활용) -->
+  <script src="static/js/product_master.js"></script>
+
+  <script>
+    // =========================
+    // 0) 유틸
+    // =========================
+    function parseNumber(val) {
+      return Number(String(val ?? "").replace(/,/g, "")) || 0;
+    }
+    function formatNumber(num) {
+      return (Number(num) || 0).toLocaleString("ko-KR");
+    }
+    function rand6() {
+      return Math.random().toString(36).slice(2, 8);
+    }
+
+    // =========================
+    // 1) DOM
+    // =========================
+    const saleDateEl = document.getElementById("saleDate");
+    const partnerEl  = document.getElementById("partner");
+
+    const barcodeSpan = document.getElementById("barcode-value");
+    const formEl      = document.getElementById("product-form");
+
+    const barcodeEl = document.getElementById("input-barcode");
+    const nameEl    = document.getElementById("input-name");
+    const priceEl   = document.getElementById("price");
+    const qtyEl     = document.getElementById("qty");
+    const paidEl    = document.getElementById("paid");
+    const stockEl   = document.getElementById("stockAmount");
+    const memoEl    = document.getElementById("memo");
+
+    const cartBox   = document.getElementById("cart-list");
+    const btnAdd    = document.getElementById("btnAddToCart");
+    const btnSaveAll= document.getElementById("btnSaveAll");
+
+    // =========================
+    // 2) 기본값: 오늘 날짜
+    // =========================
+    (function setToday(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      saleDateEl.value = `${yyyy}-${mm}-${dd}`;
+    })();
+
+    // =========================
+    // 3) 숫자 포맷 (blur에서만 콤마)
+    // =========================
+    [priceEl, qtyEl, paidEl, stockEl].forEach(el => {
+      el.addEventListener("blur", () => {
+        const v = parseNumber(el.value);
+        el.value = v ? formatNumber(v) : "";
+      });
+    });
+    // =========================
+    // ✅ 3-1) 재고금액 자동 계산: 가격 x 수량
+    // =========================
+    function updateStockAmountAuto() {
+      const price = parseNumber(priceEl.value);
+      const qty   = parseNumber(qtyEl.value);
+
+      const stockAmount = price * qty;
+
+      // 결과 표시(콤마)
+      stockEl.value = stockAmount > 0 ? formatNumber(stockAmount) : "";
+    }
+
+    // 가격/수량 입력 중에도 실시간 반영
+    priceEl.addEventListener("input", updateStockAmountAuto);
+    qtyEl.addEventListener("input", updateStockAmountAuto);
+
+    // blur로 콤마 찍힌 후에도 한번 더 맞춤
+    priceEl.addEventListener("blur", updateStockAmountAuto);
+    qtyEl.addEventListener("blur", updateStockAmountAuto);
+    // =========================
+    // 4) 매출 카트(누적) - localStorage에 저장해서 새로고침해도 유지
+    // =========================
+    const CART_KEY = "sales_cart_tmp";
+
+    const saleCart = {
+      items: [],
+      load() {
+        try {
+          this.items = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+        } catch(e) {
+          this.items = [];
+        }
+      },
+      save() {
+        localStorage.setItem(CART_KEY, JSON.stringify(this.items));
+      },
+      add(item) {
+        this.items.push(item);
+        this.save();
+        this.render();
+      },
+      clear() {
+        this.items = [];
+        this.save();
+        this.render();
+      },
+      render() {
+        if (!this.items.length) {
+          cartBox.innerHTML = "<div class='meta'>아직 추가된 항목이 없습니다. (스캔 → 값 확인 → 추가)</div>";
+          return;
+        }
+
+        let html = "";
+        this.items.forEach((it, idx) => {
+          const amount = (Number(it.price)||0) * (Number(it.qty)||0);
+          html += `
+            <div class="row">
+              <div class="title">${idx+1}. ${it.productName} (${it.barcode})</div>
+              <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)}</div>
+              <div class="meta">수금액 ${formatNumber(it.paid)} | 재고금액 ${formatNumber(it.stockAmount)}</div>
+              ${it.memo ? `<div class="meta">메모: ${escapeHtml(it.memo)}</div>` : ""}
+            </div>
+          `;
+        });
+
+        cartBox.innerHTML = html;
+      }
+    };
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    saleCart.load();
+    saleCart.render();
+
+    // =========================
+    // 5) 바코드 인식 시 폼 열기 + 바코드/상품마스터 자동 채우기
+    // =========================
+    const observer = new MutationObserver(() => {
+      const code = barcodeSpan.textContent.trim();
+      if (!code || code === "없음") return;
+
+      barcodeEl.value = code;
+      formEl.style.display = "block";
+
+      // 상품마스터에서 '기억된 값' 불러오기 (값이 비어 있을 때만)
+      let remembered = null;
+      if (window.ProductMaster) remembered = ProductMaster.get(code);
+
+      if (remembered) {
+        if (!nameEl.value) nameEl.value = remembered.name || "";
+        if (!priceEl.value && remembered.price) priceEl.value = formatNumber(remembered.price);
+      }
+    });
+    observer.observe(barcodeSpan, { childList: true });
+
+    // =========================
+    // 6) [추가] 버튼: 현재 입력값을 카트로 누적
+    // =========================
+    btnAdd.addEventListener("click", () => {
+      const item = {
+        barcode: barcodeEl.value.trim(),
+        productName: nameEl.value.trim(),
+        price: parseNumber(priceEl.value),
+        qty: parseNumber(qtyEl.value),
+        paid: parseNumber(paidEl.value),
+        stockAmount: parseNumber(priceEl.value) * parseNumber(qtyEl.value),
+        memo: memoEl.value.trim()
+      };
+
+      if (!item.barcode || !item.productName) {
+        alert("바코드와 상품명은 필수입니다.");
+        return;
+      }
+      if (item.qty <= 0) {
+        alert("수량은 1 이상이어야 합니다.");
+        return;
+      }
+
+      saleCart.add(item);
+
+      // 📌 상품마스터에 마지막 입력값 저장 (이후 자동 채움 용도)
+      if (window.ProductMaster) {
+        ProductMaster.set(item.barcode, { name: item.productName, price: item.price });
+      }
+
+      // 입력 초기화 (연속 스캔 대비)
+      barcodeEl.value = "";
+      nameEl.value = "";
+      priceEl.value = "";
+      qtyEl.value = "";
+      paidEl.value = "";
+      stockEl.value = "";
+      memoEl.value = "";
+
+      // 화면 상단 인식 결과도 초기화(선택)
+      barcodeSpan.textContent = "없음";
+    });
+
+    // =========================
+    // 7) [전체 등록] 버튼: sales_list에 저장
+    // =========================
+    btnSaveAll.addEventListener("click", () => {
+      const saleDate = saleDateEl.value;
+      const partner  = partnerEl.value.trim();
+
+      if (!saleDate) {
+        alert("납품일자를 선택해 주세요.");
+        return;
+      }
+      if (!partner) {
+        alert("거래처를 입력해 주세요.");
+        return;
+      }
+
+      const items = saleCart.items;
+      if (!items.length) {
+        alert("등록할 항목이 없습니다. 먼저 [추가]로 누적해 주세요.");
+        return;
+      }
+
+      const key = "sales_list";
+      const list = JSON.parse(localStorage.getItem(key) || "[]");
+
+      items.forEach(it => {
+        list.push({
+          id: "s_" + Date.now() + "_" + rand6(),
+          saleDate,
+          partner,
+          barcode: it.barcode,
+          productName: it.productName,
+          price: it.price,
+          qty: it.qty,
+          paid: it.paid,
+          stockAmount: it.stockAmount,
+          memo: it.memo,
+          createdAt: new Date().toISOString()
+        });
+      });
+
+      localStorage.setItem(key, JSON.stringify(list));
+      saleCart.clear();
+      localStorage.removeItem("sales_cart_tmp"); // ✅ 임시 카트 완전 초기화
+
+      // 저장 개수 표시
+      document.getElementById("save-count").style.display = "block";
+      document.getElementById("save-count-num").textContent = list.length;
+
+      alert("납품 상품이 모두 등록되었습니다.");
+      location.href = "purchase_list.html";
+
+      // ✅ 리스트 화면이 있다면 아래 경로로 이동 (필요 시 경로만 바꿔서 쓰세요)
+      // location.href = "/app/view/barcode/sales_list.html";
+    });
+  </script>
+
+  <!-- ✅ 바코드 스캔 로더 (기존과 동일) -->
+  <script>
+    const ua = navigator.userAgent;
+    const isIOS =
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    if (isIOS) {
+      alert("현재 아이폰에서는 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
+    } else {
+      const script = document.createElement("script");
+      script.src = "static/js/barcode_android.js?v=" + Date.now();
+      script.onload = () => {
+        if (window.initBarcodeAndroid) {
+          window.initBarcodeAndroid();
+        } else {
+          alert("barcode_android 초기화 함수가 없습니다");
+        }
+      };
+      document.body.appendChild(script);
+    }
+  </script>
+</body>
+</html>

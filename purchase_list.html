@@ -436,7 +436,7 @@ function render(data){
     div.style.cursor = "pointer";
     div.onclick = (e) => {
       if (e.target.classList.contains("btn-del")) return;
-      location.href = `/app/view/barcode/deal_view.html?key=${it._key}&id=${it._id}`;
+      location.href = `deal_view.html?key=${it._key}&id=${it._id}`;
     };
     div.innerHTML = `
       <button class="btn-del">✕</button>
@@ -535,7 +535,7 @@ if (btnStock) {
   btnStock.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation(); // 카드 클릭 이벤트 차단
-    location.href = "/app/view/stock/stock_list.html";
+    location.href = "stock_list.html";
   });
 }
 // 🔝 상단 네비 이동

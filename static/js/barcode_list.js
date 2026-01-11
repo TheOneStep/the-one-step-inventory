@@ -415,7 +415,7 @@ function loadViewState() {
           // 🔒 삭제 버튼 클릭이면 카드 이동 막기
           if (e.target.closest(".delete-btn")) return;
 
-          location.href = "/app/view/barcode/deal_view.html?id=" + item.id;
+          location.href = "deal_view.html?id=" + item.id;
         });
 
       listBox.appendChild(div);
@@ -545,7 +545,7 @@ function loadViewState() {
     btnStock.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();   // ⭐ 이게 핵심
-      location.href = "/app/view/stock/stock_list.html";
+      location.href = "stock_list.html";
     });
   }
 
