@@ -199,7 +199,7 @@ textarea { resize:vertical; min-height:60px; }
   </div>
 </div>
 
-<script src="/app/static/js/product_master.js"></script>
+<script src="static/js/product_master.js"></script>
 
 <script>
 function parseNumber(v){
@@ -366,7 +366,7 @@ btnSaveAll.addEventListener("click",()=>{
   localStorage.setItem("purchase_list",JSON.stringify(list));
   purchaseCart.clear();
   alert("매입이 모두 등록되었습니다.");
-  location.href = "/app/view/barcode/purchase_list.html";
+  location.href = "purchase_list.html";
 });
 
 </script>
@@ -379,7 +379,18 @@ if(isIOS){
 }else{
   const s=document.createElement("script");
   s.src="barcode_android.js?v="+Date.now();
-  s.onload=()=>window.initBarcodeAndroid&&window.initBarcodeAndroid();
+  s.onload = () => {
+  if (window.initBarcodeAndroid) {
+    window.initBarcodeAndroid({
+      onDetected(code){
+        const el = document.getElementById("barcode-value");
+        if (el) {
+          el.textContent = code;
+        }
+      }
+    });
+  }
+};
   document.body.appendChild(s);
 }
 </script>
