@@ -184,6 +184,14 @@ document.getElementById("btnSave").onclick=()=>{
     });
 
   localStorage.setItem("purchase_list",JSON.stringify(list));
+  // ✅ 저장 후 입력값 초기화 (브라우저 폼 복원 방지)
+  barcodeEl.value = "";
+  nameEl.value = "";
+  priceEl.value = "";
+  qtyEl.value = "";
+  memoEl.value = "";
+  cart = [];
+  cartEl.innerHTML = "";
   alert("매입 등록 완료");
   location.href="purchase_list.html";
 };
