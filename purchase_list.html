@@ -308,6 +308,9 @@ input[type="date"]::-webkit-datetime-edit-day-field {
   color:#fff;
   border-color:#007aff;
 }
+.meta .strong{
+  font-weight:700;
+}
 </style>
 </head>
 <body>
@@ -447,7 +450,11 @@ function render(data){
       <div class="meta">수량 ${fmt(it.qty)} · 단가 ${fmt(it.price)}</div>
       ${it.type==="purchase"
         ? `<div class="amount">총액 ${fmt(it.total)} 원</div>`
-        : `<div class="meta">수금액 ${fmt(it.paid)} · 재고금액 ${fmt(it.stockAmount)}</div>`}
+        : `<div class="meta">
+            <span class="strong">수금액 ${fmt(it.paid)}</span>
+            ·
+            <span class="strong">재고금액 ${fmt(it.stockAmount)}</span>
+          </div>`}
       ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}  
     `;
 
