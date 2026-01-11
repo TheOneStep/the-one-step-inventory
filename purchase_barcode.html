@@ -109,14 +109,42 @@ const titleEl = document.getElementById("title");
 
 // ✅ [스캔] 버튼 클릭 연결 (지금은 함수가 없어서 alert만 뜸)
 // barcode_android.js 연동을 붙이면 여기서 카메라가 열리게 됨
-const btnScan = document.getElementById("btnScan");
+let scannerLoaded = false;
+
 btnScan.addEventListener("click", () => {
   if (editMode) {
     alert("수정에서는 바코드를 이용하실 수 없습니다.");
-  } else {
-    // 등록 모드: 실제 스캔 시작 안내
-    alert("카메라가 열립니다. 바코드를 비춰주세요.");
+    return;
   }
+
+  const ua = navigator.userAgent;
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  if (isIOS) {
+    alert("아이폰은 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
+    return;
+  }
+
+  if (scannerLoaded) {
+    alert("카메라가 이미 활성화되어 있습니다.\n바코드를 비춰주세요.");
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.src = "static/js/barcode_android.js?v=" + Date.now();
+  script.onload = () => {
+    if (window.initBarcodeAndroid) {
+      window.initBarcodeAndroid({
+        onDetected(code) {
+          barcodeEl.value = code;
+        }
+      });
+      scannerLoaded = true;
+    }
+  };
+  document.body.appendChild(script);
 });
 
 let cart = [];
@@ -203,28 +231,6 @@ document.getElementById("btnSave").onclick=()=>{
   location.href="/app/view/barcode/purchase_list.html";
 };
 </script>
-<script>
-const ua = navigator.userAgent;
-const isIOS =
-  /iPhone|iPad|iPod/i.test(ua) ||
-  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-if (isIOS) {
-  alert("아이폰은 바코드 스캔을 지원하지 않습니다.");
-} else {
-  const script = document.createElement("script");
-  script.src = "static/js/barcode_android.js?v=" + Date.now();
-  script.onload = () => {
-    if (window.initBarcodeAndroid) {
-      window.initBarcodeAndroid({
-        onDetected(code){
-          barcodeEl.value = code;
-        }
-      });
-    }
-  };
-  document.body.appendChild(script);
-}
-</script>
 </body>
 </html>
