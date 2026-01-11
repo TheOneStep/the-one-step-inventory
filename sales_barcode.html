@@ -526,7 +526,7 @@
     });
   </script>
 
-  <!-- ✅ 바코드 스캔 로더 (기존과 동일) -->
+  <!-- ✅ 바코드 스캔 로더: iOS와 Android 모두 지원 -->
   <script>
     const ua = navigator.userAgent;
     const isIOS =
@@ -534,15 +534,31 @@
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
     if (isIOS) {
-      alert("현재 아이폰에서는 바코드 스캔을 지원하지 않습니다.\n안드로이드 기기에서 이용해 주세요.");
+      // Load html5-qrcode library and iOS-specific scanner.
+      const lib = document.createElement("script");
+      lib.src = "https://unpkg.com/html5-qrcode@2.4.0/html5-qrcode.min.js";
+      lib.onload = () => {
+        const iosScript = document.createElement("script");
+        iosScript.src = "static/js/barcode_ios.js?v=" + Date.now();
+        iosScript.onload = () => {
+          if (window.initBarcodeIOS) {
+            window.initBarcodeIOS();
+          } else {
+            console.error("initBarcodeIOS function is not defined in barcode_ios.js");
+          }
+        };
+        document.body.appendChild(iosScript);
+      };
+      document.body.appendChild(lib);
     } else {
+      // Fallback to Android scanner.
       const script = document.createElement("script");
       script.src = "static/js/barcode_android.js?v=" + Date.now();
       script.onload = () => {
         if (window.initBarcodeAndroid) {
           window.initBarcodeAndroid();
         } else {
-          alert("barcode_android 초기화 함수가 없습니다");
+          console.error("barcode_android 초기화 함수가 없습니다");
         }
       };
       document.body.appendChild(script);
