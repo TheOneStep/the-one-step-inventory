@@ -91,7 +91,7 @@ function uncomma(v){
   return String(v || "").replace(/,/g, "");
 }    
 const params = new URLSearchParams(location.search);
-const editMode = params.get("mode")==="edit";
+const editMode = params.get("mode")==="edit" && params.get("id");
 const editId = params.get("id");
 // ✅ 수정 모드에서는 [추가] 버튼 숨김
 if (editMode) {
