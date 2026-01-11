@@ -1,92 +1,96 @@
-// iOS barcode scanning integration using html5-qrcode.
-// This module defines an initialization function that can be invoked on iOS
-// devices to enable scanning in a similar manner to the Android implementation.
+// static/js/barcode_ios.js
+// ✅ iOS Safari 전용 바코드 스캔 (html5-qrcode)
+// 핵심: "버튼 클릭" 안에서 시작 + display:none -> block 렌더링 2프레임 대기
 
-console.log("IOS JS LOADED");
-
-// Define an initializer on the global object so that the hosting page can call
-// `initBarcodeIOS()` when needed (e.g. after the script finishes loading).
-window.initBarcodeIOS = function () {
-  const btnStart = document.getElementById("btnStart");
-  const resultSpan = document.getElementById("barcode-value");
-  const wrapper = document.getElementById("scan-wrapper");
+(function () {
   let html5QrCode = null;
-  let scanning = false;
+  let isRunning = false;
 
-  // Reset the scanner and hide the video when scanning is complete.
-  function handleScanComplete(code) {
-    scanning = false;
-    // Update the displayed barcode value.
-    resultSpan.textContent = code;
-    // Pause the scanner (pause is recommended over stop on iOS).
-    if (html5QrCode) {
-      try {
-        html5QrCode.pause(true);
-      } catch (e) {
-        console.warn("Error pausing scanner:", e);
-      }
-    }
-    // Hide the scanning UI.
-    if (wrapper) wrapper.style.display = "none";
+  function $(id) {
+    return document.getElementById(id);
   }
 
-  // Success callback passed to html5-qrcode library.
-  function onScanSuccess(decodedText /* decodedText */, decodedResult) {
-    if (!scanning) return;
-    console.log("IOS SCAN:", decodedText);
-    handleScanComplete(decodedText);
+  // iOS 렌더링 반영 대기 (display:none -> block 직후 바로 start 하면 iOS가 종종 실패함)
+  function waitTwoFrames() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
   }
 
-  // Start scanning when the user taps the scan button.
-  btnStart.onclick = async () => {
-    if (scanning) return;
-    scanning = true;
-    // Reset the result display before scanning.
-    resultSpan.textContent = "없음";
-    if (wrapper) wrapper.style.display = "block";
+  async function startScan() {
+    const scanWrapper = $("scan-wrapper");
+    const resultSpan = $("barcode-value");
 
-    // If a previous scanner exists, try to pause/stop it first.
-    if (html5QrCode) {
-      try {
-        html5QrCode.stop();
-      } catch (e) {
-        // ignore if stop isn't available or fails
-      }
+    if (!scanWrapper) {
+      alert("스캔 영역(scan-wrapper)을 찾을 수 없습니다.");
+      return;
     }
 
-    html5QrCode = new Html5Qrcode("reader");
+    // ✅ 스캔 영역 표시
+    scanWrapper.style.display = "block";
+
+    // ✅ iOS Safari 버그 우회: 렌더링이 실제로 그려진 후 카메라 시작
+    await waitTwoFrames();
+
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("reader");
+    }
+
+    // 이미 실행 중이면 재실행 방지
+    if (isRunning) return;
+
     try {
-      // Configure supported barcode formats for Html5Qrcode. This improves
-      // recognition performance on linear codes used in retail (EAN, UPC, CODE).
-      const formats = [
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E
-      ];
+      isRunning = true;
+
       await html5QrCode.start(
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: 250,
-          formatsToSupport: formats,
-          // Use native BarcodeDetector if available on the platform for better performance.
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-          }
+          qrbox: { width: 240, height: 120 },
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true }
         },
-        onScanSuccess,
-        (errorMessage) => {
-          // Scan failure callback; ignore continuous errors.
-          console.debug("Scan error:", errorMessage);
+        async (decodedText) => {
+          // ✅ 인식 성공
+          if (resultSpan) resultSpan.textContent = decodedText;
+
+          // ✅ 스캔 멈춤 (멈추지 않으면 카메라 계속 잡고 있어서 다음 동작 꼬일 수 있음)
+          try {
+            await html5QrCode.stop();
+          } catch (e) {
+            // stop 실패는 무시
+          }
+          isRunning = false;
+        },
+        (err) => {
+          // 인식 실패 로그는 조용히 무시 (너무 많이 발생)
+          // console.log(err);
         }
       );
-    } catch (err) {
-      console.error("Failed to start iOS scanner:", err);
-      scanning = false;
-      if (wrapper) wrapper.style.display = "none";
+    } catch (e) {
+      isRunning = false;
+      console.error(e);
+      alert(
+        "아이폰에서 카메라를 열 수 없습니다.\n" +
+        "1) HTTPS 접속인지\n" +
+        "2) Safari 카메라 권한이 허용인지\n" +
+        "3) 다른 앱이 카메라를 사용 중인지 확인해 주세요."
+      );
     }
+  }
+
+  // 외부에서 호출되는 초기화 함수
+  window.initBarcodeIOS = function () {
+    const btnStart = $("btnStart");
+    if (!btnStart) {
+      console.error("btnStart 버튼을 찾을 수 없습니다.");
+      return;
+    }
+
+    // 중복 바인딩 방지: 한번만 연결
+    if (btnStart.dataset.bound === "1") return;
+    btnStart.dataset.bound = "1";
+
+    // ✅ iOS는 반드시 "사용자 클릭" 이벤트 안에서 카메라 시작해야 함
+    btnStart.addEventListener("click", startScan);
   };
-};
+})();
