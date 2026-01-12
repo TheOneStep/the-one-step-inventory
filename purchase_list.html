@@ -498,9 +498,14 @@ function applyFilters(){
   const eTs = eVal ? new Date(eVal + "T23:59:59").getTime() : null;
 
   viewList = originList.filter(it=>{
-    // ✅ 0) 매입/매출 체크 필터
-    if (it.type === "purchase" && !chkPurchase.checked) return false;
-    if (it.type === "sale" && !chkSale.checked) return false;  
+    // 0) 타입 필터 (거래처 체크 시 납품은 강제 허용)
+    if (it.type === "purchase") {
+      if (!chkPurchase.checked) return false;
+    }
+
+    if (it.type === "sale") {
+      if (!chkSale.checked && !chkPartner.checked) return false;
+    }
     // 1) 키워드
     if (q) {
       let target = (it.name || "") + (it.barcode || "");
