@@ -113,7 +113,6 @@ const barcodeEl=document.getElementById("barcode");
 const nameEl=document.getElementById("name");
 const priceEl=document.getElementById("price");
 const qtyEl=document.getElementById("qty");
-const paidEl=document.getElementById("paid");
 const memoEl=document.getElementById("memo");
 const stockAmountEl = document.getElementById("stockAmount");
 const cartEl=document.getElementById("cart");
@@ -163,7 +162,6 @@ document.getElementById("btnAdd").onclick=()=>{
     productName:nameEl.value,
     price:Number(priceEl.value),
     qty:Number(qtyEl.value),
-    paid:Number(paidEl.value),
     memo:memoEl.value
   }];
   render();
@@ -188,7 +186,6 @@ if(editMode && editId){
       productName:item.productName,
       price:item.price,
       qty:item.qty,
-      paid:item.paid,
       memo:item.memo||""
     }];
     render();
@@ -201,10 +198,9 @@ document.getElementById("btnSave").onclick=()=>{
   // ✅ 수정/저장 시 cart를 input 값으로 강제 동기화
   cart = [{
     barcode: barcodeEl.value,
-    name: nameEl.value,
+    productName: nameEl.value,
     price: Number(uncomma(priceEl.value)),
     qty: Number(uncomma(qtyEl.value)),
-    paid: Number(uncomma(paidEl.value)),
     memo: memoEl.value
   }];
 
