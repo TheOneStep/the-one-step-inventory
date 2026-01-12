@@ -307,6 +307,32 @@ document.addEventListener("DOMContentLoaded", () => {
     URL.revokeObjectURL(url);
   }
 
+  // =========================
+  // 🧾 거래처 수정 버튼 클릭
+  // =========================
+  let editingStoreName = null;
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action='edit-store']");
+    if (!btn) return;
+
+    editingStoreName = btn.dataset.store;
+
+    const sales = safeJSON(localStorage.getItem("sales_list"));
+    const target = sales.find(s => (s.partner || "") === editingStoreName);
+    if (!target) {
+      alert("거래처 데이터를 찾을 수 없습니다.");
+      return;
+    }
+
+    document.getElementById("edit-store-name").value = editingStoreName;
+    document.getElementById("edit-paid").value = target.paid || "";
+    document.getElementById("edit-return").value = target.returnNote || "";
+    document.getElementById("edit-memo").value = target.storeMemo || "";
+
+    storeEditModal.style.display = "flex";
+  });
+
   tabProduct.addEventListener("click", () => setMode("product"));
   tabStore.addEventListener("click", () => setMode("store"));
 
@@ -342,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!btn) return;
 
     const storeName = btn.getAttribute("data-store");
-    alert(`거래처 수정 클릭됨: ${storeName}`);
   });
 
   // =========================
@@ -499,3 +524,88 @@ function buildStoreSummary(sales, avgCostMap) {
     (a, b) => (b.deliveryTotal - b.paidTotal) - (a.deliveryTotal - a.paidTotal)
   );
 }
+// =========================
+// 🧾 거래처 수정 모달
+// =========================
+const storeEditModal = document.createElement("div");
+storeEditModal.style.cssText = `
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+`;
+storeEditModal.innerHTML = `
+  <div style="
+    width:90%;
+    max-width:360px;
+    background:#fff;
+    border-radius:16px;
+    padding:18px;
+  ">
+    <h3 style="margin:0 0 12px; text-align:center;">거래처 수정</h3>
+
+    <div class="field">
+      <label>거래처명</label>
+      <input id="edit-store-name" />
+    </div>
+
+    <div class="field">
+      <label>수금액</label>
+      <input id="edit-paid" inputmode="numeric" />
+    </div>
+
+    <div class="field">
+      <label>반품</label>
+      <input id="edit-return" />
+    </div>
+
+    <div class="field">
+      <label>메모</label>
+      <textarea id="edit-memo"></textarea>
+    </div>
+
+    <button id="btn-store-save" class="btn btn-blue">저장</button>
+    <button id="btn-store-cancel" class="btn btn-gray">취소</button>
+  </div>
+`;
+document.body.appendChild(storeEditModal);
+
+document.getElementById("btn-store-save").addEventListener("click", () => {
+  const newName = document.getElementById("edit-store-name").value.trim();
+  const paid = Number(
+    String(document.getElementById("edit-paid").value).replace(/,/g,"")
+  ) || 0;
+  const returnNote = document.getElementById("edit-return").value.trim();
+  const memo = document.getElementById("edit-memo").value.trim();
+
+  if (!newName) {
+    alert("거래처명은 필수입니다.");
+    return;
+  }
+
+  const sales = safeJSON(localStorage.getItem("sales_list"));
+
+  sales.forEach(s => {
+    if ((s.partner || "") === editingStoreName) {
+      s.partner = newName;
+      s.paid = paid;
+      s.returnNote = returnNote;
+      s.storeMemo = memo;
+    }
+  });
+
+  localStorage.setItem("sales_list", JSON.stringify(sales));
+
+  editingStoreName = null;
+  storeEditModal.style.display = "none";
+
+  location.reload(); // 즉시 반영
+});
+
+document.getElementById("btn-store-cancel").addEventListener("click", () => {
+  storeEditModal.style.display = "none";
+  editingStoreName = null;
+});
