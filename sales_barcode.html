@@ -310,8 +310,8 @@
     </div>
   </div>
 
-  <!-- ✅ 상품명/가격 기억(매입과 동일하게 활용) -->
-  <script src="static/js/product_master.js"></script>
+  <!-- ✅ 상품명/가격 기억(매입과 다르게 활용) -->
+  <script src="static/js/sales_price_master.js"></script>
 
   <script>
     // =========================
@@ -535,7 +535,15 @@
 
       if (remembered) {
         if (!nameEl.value) nameEl.value = remembered.name || "";
-        if (!priceEl.value && remembered.price) priceEl.value = formatNumber(remembered.price);
+      }
+
+      // ✅ 거래처 기준 납품 가격 자동 입력
+      const storeName = partnerEl.value.trim();
+      if (storeName && window.SalesPriceMaster) {
+        const rememberedPrice = SalesPriceMaster.get(storeName, code);
+        if (rememberedPrice && !priceEl.value) {
+          priceEl.value = formatNumber(rememberedPrice);
+        }
       }
     });
     observer.observe(barcodeSpan, { childList: true });
