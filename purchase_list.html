@@ -360,7 +360,7 @@ input[type="date"]::-webkit-datetime-edit-day-field {
 
     <label class="type-item">
       <input type="checkbox" id="chk-sale" checked>
-      <span>매출</span>
+      <span>납품</span>
     </label>
   </div>
 
@@ -413,10 +413,8 @@ let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
     barcode:i.barcode,
     price:n(i.price),
     qty:n(i.qty),
-    paid:n(i.paid),
-    stockAmount:n(i.price)*n(i.qty),
-    memo: i.memo || "",   // ✅ 추가
-    createdAt: i.createdAt   // ✅ 핵심
+    memo: i.memo || "",
+    createdAt: i.createdAt
   }));
 
 let originList = [...purchases, ...sales];
@@ -443,19 +441,18 @@ function render(data){
     };
     div.innerHTML = `
       <button class="btn-del">✕</button>
-      <span class="badge ${it.type}">${it.type==="purchase"?"매입":"매출"}</span>
+      <span class="badge ${it.type}">${it.type==="purchase" ? "매입" : "납품"}</span>
       <div class="title">${it.name}</div>
       <div class="barcode">바코드 ${it.barcode}</div>
       <div class="meta">${it.date}</div>
       <div class="meta">수량 ${fmt(it.qty)} · 단가 ${fmt(it.price)}</div>
-      ${it.type==="purchase"
+
+      ${it.type === "purchase"
         ? `<div class="amount">총액 ${fmt(it.total)} 원</div>`
-        : `<div class="meta">
-            <span class="strong">수금액 ${fmt(it.paid)}</span>
-            ·
-            <span class="strong">재고금액 ${fmt(it.stockAmount)}</span>
-          </div>`}
-      ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}  
+        : ""
+      }
+
+      ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}
     `;
 
     div.querySelector(".btn-del").onclick = ()=>{
@@ -516,12 +513,13 @@ document.getElementById("btn-range-reset").onclick = ()=>{
 document.getElementById("btn-excel").onclick = ()=>{
   if(!viewList.length){ alert("내보낼 데이터가 없습니다."); return; }
 
-  let csv = "\uFEFF구분,날짜,상품명,바코드,수량,단가,총액/수금액,재고금액\n";
+  let csv = "\uFEFF구분,날짜,상품명,바코드,수량,단가,총액\n";
   viewList.forEach(it=>{
     if(it.type==="purchase"){
-      csv += `매입,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.total},\n`;
+      csv += `매입,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.total}\n`;
     }else{
-      csv += `매출,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.paid},${it.stockAmount}\n`;
+      // ✅ 납품은 리스트에서도, 엑셀에서도 상품 단위만
+      csv += `납품,${it.date},${it.name},${it.barcode},${it.qty},${it.price},\n`;
     }
   });
 
