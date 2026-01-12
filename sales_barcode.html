@@ -245,7 +245,11 @@
 
       <div class="field">
         <label>바코드</label>
-        <input type="text" id="input-barcode" readonly>
+        <input
+          id="input-barcode"
+          placeholder="바코드 직접 입력 가능"
+          inputmode="numeric"
+        >
       </div>
 
       <div class="field">
@@ -273,6 +277,24 @@
       <!-- ✅ 누적 표시 영역 -->
       <div id="cart-list"></div>
 
+      <!-- 🔁 반품 (거래처 기준) -->
+      <div class="field">
+        <label>반품</label>
+        <input
+          type="text"
+          id="returnNote"
+          placeholder="반품 내용 또는 수량"
+        >
+      </div>
+
+      <!-- 📝 약국 이슈 메모 (거래처 기준) -->
+      <div class="field">
+        <label>약국 메모</label>
+        <textarea
+          id="storeMemo"
+          placeholder="약국 관련 이슈, 요청사항 등"
+        ></textarea>
+      </div>
       <div class="field">
         <label>수금액</label>
         <input type="text" id="paid" inputmode="numeric" placeholder="">
@@ -321,7 +343,9 @@
     const paidEl    = document.getElementById("paid");
     const stockEl   = document.getElementById("stockAmount");
     const memoEl    = document.getElementById("memo");
-
+    
+    const returnEl   = document.getElementById("returnNote");
+    const storeMemoEl = document.getElementById("storeMemo");
     const cartBox   = document.getElementById("cart-list");
     const btnAdd    = document.getElementById("btnAddToCart");
     const btnSaveAll= document.getElementById("btnSaveAll");
@@ -418,7 +442,6 @@
 
         <div class="title">${idx+1}. ${it.productName} (${it.barcode})</div>
         <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)}</div>
-        <div class="meta">수금액 ${formatNumber(it.paid)} | 재고금액 ${formatNumber(it.stockAmount)}</div>
         ${it.memo ? `<div class="meta">메모: ${memoSafe}</div>` : ""}
       </div>
     `;
@@ -516,8 +539,6 @@ btnAdd.addEventListener("click", () => {
     productName: nameEl.value.trim(),
     price: parseNumber(priceEl.value),
     qty: parseNumber(qtyEl.value),
-    paid: parseNumber(paidEl.value),
-    stockAmount: parseNumber(priceEl.value) * parseNumber(qtyEl.value),
     memo: memoEl.value.trim()
   };
 
@@ -584,6 +605,14 @@ btnAdd.addEventListener("click", () => {
       const key = "sales_list";
       const list = JSON.parse(localStorage.getItem(key) || "[]");
 
+      const paidTotal = parseNumber(paidEl.value);
+      const stockTotal = items.reduce(
+        (sum, it) => sum + (it.price * it.qty), 0
+      );
+
+      const returnNote = returnEl.value.trim();
+      const storeMemo  = storeMemoEl.value.trim();
+
       items.forEach(it => {
         list.push({
           id: "s_" + Date.now() + "_" + rand6(),
@@ -593,16 +622,24 @@ btnAdd.addEventListener("click", () => {
           productName: it.productName,
           price: it.price,
           qty: it.qty,
-          paid: it.paid,
-          stockAmount: it.stockAmount,
           memo: it.memo,
+
+          // ✅ 거래처 기준 정보 (모든 상품 동일)
+          paid: paidTotal,
+          stockAmount: stockTotal,
+
+          returnNote,
+          storeMemo,          
+
           createdAt: new Date().toISOString()
         });
       });
-
       localStorage.setItem(key, JSON.stringify(list));
       saleCart.clear();
       localStorage.removeItem("sales_cart_tmp"); // ✅ 임시 카트 완전 초기화
+
+      returnEl.value = "";
+      storeMemoEl.value = "";
 
       // 저장 개수 표시
       document.getElementById("save-count").style.display = "block";
