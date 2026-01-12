@@ -139,15 +139,18 @@ document.addEventListener("DOMContentLoaded", () => {
       card.className = "card";
 
       const storeName = escapeHtml(store.storeName || "-");
-      const balance = Math.round(store.balance || 0);
-      const profit = Math.round(store.profit || 0);
+      const delivery = Math.round(store.deliveryTotal || 0);
+      const paid = Math.round(store.paidTotal || 0);
+      const unpaid = delivery - paid;
+      
 
       card.innerHTML = `
         <div class="store-head" data-action="toggle">
           <div class="store-name">🏬 ${storeName}</div>
           <div class="store-right">
-            <div>잔고 <span class="money red">${balance.toLocaleString()}원</span></div>
-            <div>손익 <span class="money ${profit >= 0 ? "green" : "red"}">${profit >= 0 ? "+" : ""}${profit.toLocaleString()}원</span></div>
+            <div>납품 금액 <span class="money">${delivery.toLocaleString()}원</span></div>
+            <div>수금 금액 <span class="money green">${paid.toLocaleString()}원</span></div>
+            <div>미수금 <span class="money red">${unpaid.toLocaleString()}원</span></div>
           </div>
         </div>
         <div class="store-body">
@@ -170,27 +173,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderStoreRows(store) {
     const items = Object.values(store.items || {});
-    if (items.length === 0) return `<div class="empty" style="padding:22px 0;">납품 내역이 없습니다.</div>`;
+    if (items.length === 0) {
+      return `<div class="empty" style="padding:22px 0;">납품 내역이 없습니다.</div>`;
+    }
 
-    // 납품 수량 많은 순 정렬
+    // 납품 수량 많은 순
     items.sort((a, b) => Number(b.qty || 0) - Number(a.qty || 0));
 
-    return items.map(it => {
+    let html = "";
+
+    // 1️⃣ 상품 목록
+    items.forEach(it => {
       const name = escapeHtml(it.productName || "-");
       const bc = escapeHtml(it.barcode || "-");
       const qty = Number(it.qty || 0);
       const amount = Math.round(Number(it.total || 0));
       const paid = Math.round(Number(it.paid || 0));
-      const bal = Math.round(amount - paid);
+      const unpaid = amount - paid;
 
-      return `
+      html += `
         <div class="store-row">
           <div class="pname">${name}</div>
           <div class="pcode">${bc}</div>
-          <div class="pqty">납품 ${qty.toLocaleString()}개 · 금액 ${amount.toLocaleString()}원 · 잔고 ${bal.toLocaleString()}원</div>
+          <div class="pqty">
+            납품 ${qty.toLocaleString()}개 ·
+            납품금액 ${amount.toLocaleString()}원 ·
+            수금 ${paid.toLocaleString()}원 ·
+            미수금 ${unpaid.toLocaleString()}원
+          </div>
         </div>
       `;
-    }).join("");
+    });
+
+    // 2️⃣ 거래처 기준 정보 + 수정 버튼  ← 🔥 이게 “1번”
+    html += `
+      <div style="margin-top:14px; padding-top:12px; border-top:1px solid #eee;">
+        <div style="font-size:13px; margin-bottom:6px;">
+          반품: ${escapeHtml(store.returnNote || "-")}
+        </div>
+        <div style="font-size:13px; margin-bottom:6px;">
+          수금액: ${Number(store.paidTotal || 0).toLocaleString()}원
+        </div>
+        <div style="font-size:13px; margin-bottom:10px;">
+          메모: ${escapeHtml(store.storeMemo || "-")}
+        </div>
+
+        <button
+          class="mini edit"
+          type="button"
+          data-action="edit-store"
+          data-store="${escapeAttr(store.storeName)}"
+        >
+          수정
+        </button>
+      </div>
+    `;
+
+    return html;
   }
 
   // =========================
@@ -416,16 +455,17 @@ function buildStoreSummary(sales, avgCostMap) {
     if (!stores[store]) {
       stores[store] = {
         storeName: store,
-        balance: 0,
-        profit: 0,
+
+        // 🔽 새 기준
+        deliveryTotal: 0, // 납품 금액 (가격 × 수량)
+        paidTotal: 0,     // 수금 금액
         items: {}
       };
     }
-
-    // 카드 요약
-    stores[store].balance += (total - paid);
-    const avgCost = avgCostMap[barcode] || 0;
-    stores[store].profit += (total - (avgCost * qty));
+    // ✅ 납품 금액 누적
+    stores[store].deliveryTotal += total;
+    // ✅ 수금 금액 누적
+    stores[store].paidTotal += paid;
 
     // 아이템 묶기
     if (!stores[store].items[barcode]) {
@@ -443,5 +483,7 @@ function buildStoreSummary(sales, avgCostMap) {
   });
 
   // 잔고 큰 순
-  return Object.values(stores).sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
+  return Object.values(stores).sort(
+    (a, b) => (b.deliveryTotal - b.paidTotal) - (a.deliveryTotal - a.paidTotal)
+  );
 }
