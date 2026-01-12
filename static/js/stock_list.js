@@ -151,8 +151,27 @@ document.addEventListener("DOMContentLoaded", () => {
             <div>납품 총액 <span class="money">${delivery.toLocaleString()}원</span></div>
             <div>수금 금액 <span class="money green">${paid.toLocaleString()}원</span></div>
             <div>미수금 <span class="money red">${unpaid.toLocaleString()}원</span></div>
+            ${store.returnNote ? `
+              <div style="font-size:12px; color:#666;">
+                반품 ${escapeHtml(store.returnNote)}
+              </div>
+            ` : ``}
           </div>
         </div>
+
+        ${store.storeMemo ? `
+          <div style="
+            padding:8px 14px;
+            font-size:13px;
+            color:#666;
+            background:#f7f7f7;
+            border-radius:8px;
+            margin:8px 0;
+          ">
+            메모: ${escapeHtml(store.storeMemo)}
+          </div>
+        ` : ``}
+
         <div class="store-body">
           ${renderStoreRows(store)}
         </div>
@@ -188,46 +207,33 @@ document.addEventListener("DOMContentLoaded", () => {
       const bc = escapeHtml(it.barcode || "-");
       const qty = Number(it.qty || 0);
       const amount = Math.round(Number(it.total || 0));
-      const paid = Math.round(Number(it.paid || 0));
-      const unpaid = amount - paid;
+      const price = qty > 0 ? Math.round(amount / qty) : 0;
+      const memo = (it.memo || "").trim();
 
       html += `
         <div class="store-row">
           <div class="pname">${name}</div>
           <div class="pcode">${bc}</div>
+
           <div class="pqty">
+            가격 ${price.toLocaleString()}원 ·
             납품 ${qty.toLocaleString()}개 ·
-            납품금액 ${amount.toLocaleString()}원 ·
-            수금 ${paid.toLocaleString()}원 ·
-            미수금 ${unpaid.toLocaleString()}원
+            납품금액 ${amount.toLocaleString()}원
           </div>
+
+          ${memo ? `
+            <div style="
+              font-size:12px;
+              color:#666;
+              margin-top:4px;
+              padding-left:2px;
+            ">
+              메모: ${escapeHtml(memo)}
+            </div>
+          ` : ``}
         </div>
       `;
     });
-
-    // 2️⃣ 거래처 기준 정보 + 수정 버튼  ← 🔥 이게 “1번”
-    html += `
-      <div style="margin-top:14px; padding-top:12px; border-top:1px solid #eee;">
-        <div style="font-size:13px; margin-bottom:6px;">
-          반품: ${escapeHtml(store.returnNote || "-")}
-        </div>
-        <div style="font-size:13px; margin-bottom:6px;">
-          수금액: ${Number(store.paidTotal || 0).toLocaleString()}원
-        </div>
-        <div style="font-size:13px; margin-bottom:10px;">
-          메모: ${escapeHtml(store.storeMemo || "-")}
-        </div>
-
-        <button
-          class="mini edit"
-          type="button"
-          data-action="edit-store"
-          data-store="${escapeAttr(store.storeName)}"
-        >
-          수정
-        </button>
-      </div>
-    `;
 
     return html;
   }
