@@ -657,6 +657,10 @@ btnAdd.addEventListener("click", () => {
 
           createdAt: new Date().toISOString()
         });
+        // ✅ 납품 가격 기억 (거래처 + 바코드 기준)
+        if (window.SalesPriceMaster && it.price > 0) {
+          SalesPriceMaster.set(partner, it.barcode, it.price);
+        }
       });
       localStorage.setItem(key, JSON.stringify(list));
       saleCart.clear();
