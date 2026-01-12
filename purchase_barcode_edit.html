@@ -36,6 +36,52 @@ button{border:none;border-radius:999px;margin-top:10px}
   background: #f7f7f7;
   box-shadow: none;
 }
+/* ===============================
+   📐 공통 간격 · 정렬 기준
+   =============================== */
+
+/* 모든 메뉴(라벨) 가운데 정렬 */
+.field label {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+/* 모든 필드 간격 통일 */
+.field {
+  margin-bottom: 16px;
+}
+
+/* 입력값 줄 리듬 고정 */
+.field input,
+.field textarea {
+  line-height: 1.4;
+  text-align: center;
+}
+/* 스캔 버튼 위아래 여백 */
+.btn-scan {
+  margin: 16px 0;
+}
+
+/* 스캔 버튼 다음에 오는 바코드 입력 박스 */
+.btn-scan + .field {
+  margin-top: 12px;
+}
+/* 가격·수량·총액 줄 리듬 */
+.cart-row {
+  padding: 10px 0;
+  line-height: 1.45;
+}
+
+/* 총액 필드 위 여백 통일 */
+.field input[readonly],
+.field input:disabled {
+  margin-top: 4px;
+}
+/* 하단 버튼 간격 통일 */
+.btn-add,
+.btn-save {
+  margin-top: 14px;
+}
 </style>
 </head>
 
