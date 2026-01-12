@@ -330,11 +330,6 @@ const purchaseCart={
       .replaceAll("\n","<br>");
 
     html+=`
-      <div class="row" data-tempid="${it.tempId}">
-        <div class="title">${idx+1}. ${it.name} (${it.barcode})</div>
-        <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)} | 금액 ${formatNumber(amt)}</div>
-        ${it.memo?`<div class="meta">메모: ${memoSafe}</div>`:""}
-
         <div class="row" data-tempid="${it.tempId}">
           <span class="del-x" data-action="del">×</span>
 
