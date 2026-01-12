@@ -311,6 +311,9 @@ input[type="date"]::-webkit-datetime-edit-day-field {
 .meta .strong{
   font-weight:700;
 }
+.card.sale .meta strong{
+  color:#d93b3b;
+}
 </style>
 </head>
 <body>
@@ -362,6 +365,11 @@ input[type="date"]::-webkit-datetime-edit-day-field {
       <input type="checkbox" id="chk-sale" checked>
       <span>납품</span>
     </label>
+
+    <label class="type-item">
+      <input type="checkbox" id="chk-partner" checked>
+      <span>거래처</span>
+    </label>
   </div>
 
   <!-- 엑셀 버튼 -->
@@ -384,6 +392,7 @@ const rangeEndEl = document.getElementById("range-end");
 // ✅ 매입/매출 체크박스
 const chkPurchase = document.getElementById("chk-purchase");
 const chkSale = document.getElementById("chk-sale");
+const chkPartner = document.getElementById("chk-partner");
 
 function n(v){ return Number(v)||0; }
 function fmt(v){ return (Number(v)||0).toLocaleString("ko-KR"); }
@@ -409,6 +418,7 @@ let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
     _id:i.id,
     type:"sale",
     date:i.saleDate,
+    partner: i.partner || "", 
     name:i.productName||i.name,
     barcode:i.barcode,
     price:n(i.price),
@@ -443,13 +453,18 @@ function render(data){
     div.innerHTML = `
       <button class="btn-del">✕</button>
       <span class="badge ${it.type}">${it.type==="purchase" ? "매입" : "납품"}</span>
+      ${
+        it.type === "sale" && it.partner
+          ? `<div class="meta"><strong>거래처: ${it.partner}</strong></div>`
+          : ""
+      }
       <div class="title">${it.name}</div>
       <div class="barcode">바코드 ${it.barcode}</div>
       <div class="meta">${it.date}</div>
       <div class="meta">수량 ${fmt(it.qty)} · 가격 ${fmt(it.price)}</div>
 
       <div class="amount">
-        ${it.type === "purchase" ? "총액" : "납품 총액"} ${fmt(it.total)} 원
+        ${it.type === "purchase" ? "매입 총액" : "납품 총액"} ${fmt(it.total)} 원
       </div>
 
       ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}
@@ -483,8 +498,15 @@ function applyFilters(){
     if (it.type === "purchase" && !chkPurchase.checked) return false;
     if (it.type === "sale" && !chkSale.checked) return false;  
     // 1) 키워드
-    if(q){
-      if(!(it.name||"").includes(q) && !(it.barcode||"").includes(q)) return false;
+    if (q) {
+      let target = (it.name || "") + (it.barcode || "");
+
+      // ✅ 거래처 체크되어 있을 때만 포함
+      if (chkPartner.checked) {
+        target += (it.partner || "");
+      }
+
+      if (!target.includes(q)) return false;
     }
 
     // 2) 날짜 (purchaseDate/saleDate가 비어있으면 기간 필터에서 제외)
@@ -501,6 +523,7 @@ function applyFilters(){
 searchEl.addEventListener("input", applyFilters);
 chkPurchase.addEventListener("change", applyFilters);
 chkSale.addEventListener("change", applyFilters);
+chkPartner.addEventListener("change", applyFilters);
 document.getElementById("btn-range").onclick = applyFilters;
 document.getElementById("btn-range-reset").onclick = ()=>{
   rangeStartEl.value="";
