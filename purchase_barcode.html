@@ -123,6 +123,27 @@ textarea { resize:vertical; min-height:60px; }
   background: #f7f7f7;
   box-shadow: none;
 }
+#cart-list .row {
+  position: relative;
+  cursor: pointer;
+}
+
+#cart-list .row:hover {
+  background: #f6f9ff;
+}
+
+.del-x {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+}
+
+.del-x:hover {
+  color: #ff3b30;
+}
 </style>
 </head>
 
@@ -203,8 +224,8 @@ textarea { resize:vertical; min-height:60px; }
 <script src="static/js/product_master.js"></script>
 
 <script>
-  // ✅ 수정모드 상태
-  let editingTempId = null;
+// ✅ 수정모드 상태
+let editingTempId = null;
 
 function parseNumber(v){
 
@@ -314,9 +335,16 @@ const purchaseCart={
         <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)} | 금액 ${formatNumber(amt)}</div>
         ${it.memo?`<div class="meta">메모: ${memoSafe}</div>`:""}
 
-        <div style="margin-top:8px; display:flex; gap:8px;">
-          <button type="button" class="btn btn-gray" data-action="edit" style="margin-top:0;">수정</button>
-          <button type="button" class="btn btn-gray" data-action="del"  style="margin-top:0;">삭제</button>
+        <div class="row" data-tempid="${it.tempId}">
+          <span class="del-x" data-action="del">×</span>
+
+          <div class="title">${idx+1}. ${it.name} (${it.barcode})</div>
+          <div class="meta">
+            가격 ${formatNumber(it.price)} |
+            수량 ${formatNumber(it.qty)} |
+            금액 ${formatNumber(amt)}
+          </div>
+          ${it.memo ? `<div class="meta">메모: ${memoSafe}</div>` : ""}
         </div>
       </div>
     `;
@@ -331,34 +359,15 @@ purchaseCart.render();
 
 // ✅ 장바구니 수정/삭제 이벤트 (전역함수 필요 없음)
 cartBox.addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-action]");
-  if (!btn) return;
 
-  const row = e.target.closest(".row");
-  if (!row) return;
+  // ❌ 삭제(X) 클릭
+  const delBtn = e.target.closest(".del-x");
+  if (delBtn) {
+    e.stopPropagation(); // row 클릭 방지
 
-  const tempId = row.getAttribute("data-tempid");
-  if (!tempId) return;
+    const row = delBtn.closest(".row");
+    const tempId = row.getAttribute("data-tempid");
 
-  const action = btn.getAttribute("data-action");
-
-  if (action === "edit") {
-    const it = purchaseCart.items.find(x => x.tempId === tempId);
-    if (!it) return;
-
-    editingTempId = tempId;
-
-    barcodeEl.value = it.barcode || "";
-    nameEl.value = it.name || "";
-    priceEl.value = it.price ? formatNumber(it.price) : "";
-    qtyEl.value = it.qty ? formatNumber(it.qty) : "";
-    memoEl.value = it.memo || "";
-
-    formEl.style.display = "block";
-    return;
-  }
-
-  if (action === "del") {
     if (!confirm("이 항목을 삭제할까요?")) return;
 
     purchaseCart.items = purchaseCart.items.filter(x => x.tempId !== tempId);
@@ -368,6 +377,24 @@ cartBox.addEventListener("click", (e) => {
     if (editingTempId === tempId) editingTempId = null;
     return;
   }
+
+  // ✏️ row 클릭 → 수정
+  const row = e.target.closest(".row");
+  if (!row) return;
+
+  const tempId = row.getAttribute("data-tempid");
+  const it = purchaseCart.items.find(x => x.tempId === tempId);
+  if (!it) return;
+
+  editingTempId = tempId;
+
+  barcodeEl.value = it.barcode || "";
+  nameEl.value = it.name || "";
+  priceEl.value = it.price ? formatNumber(it.price) : "";
+  qtyEl.value = it.qty ? formatNumber(it.qty) : "";
+  memoEl.value = it.memo || "";
+
+  formEl.style.display = "block";
 });
 
 const observer=new MutationObserver(()=>{

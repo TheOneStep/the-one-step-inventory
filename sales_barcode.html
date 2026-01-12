@@ -153,6 +153,28 @@
       background: #f7f7f7;
       box-shadow: none;
     }
+
+    #cart-list .row {
+      position: relative;
+      cursor: pointer;
+    }
+
+    #cart-list .row:hover {
+      background: #fff5f5;
+    }
+
+    .del-x {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 18px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .del-x:hover {
+      color: #ff3b30;
+    }
     
   </style>
 </head>
@@ -239,17 +261,7 @@
       <div class="field">
         <label>수량</label>
         <input type="text" id="qty" inputmode="numeric" placeholder="">
-      </div>
-
-      <div class="field">
-        <label>수금액</label>
-        <input type="text" id="paid" inputmode="numeric" placeholder="">
-      </div>
-
-      <div class="field">
-        <label>재고금액</label>
-        <input type="text" id="stockAmount" inputmode="numeric" placeholder="" readonly>
-      </div>
+      </div>     
 
       <div class="field">
         <label>메모</label>
@@ -261,6 +273,16 @@
       <!-- ✅ 누적 표시 영역 -->
       <div id="cart-list"></div>
 
+      <div class="field">
+        <label>수금액</label>
+        <input type="text" id="paid" inputmode="numeric" placeholder="">
+      </div>
+
+      <div class="field">
+        <label>재고금액</label>
+        <input type="text" id="stockAmount" inputmode="numeric" placeholder="" readonly>
+      </div>
+      
       <!-- ✅ 누적 추가/저장 버튼 -->
       <button id="btnSaveAll" class="btn btn-blue">전체 등록</button>
     </div>
@@ -392,15 +414,12 @@
 
     html += `
       <div class="row" data-tempid="${it.tempId}">
+        <span class="del-x">×</span>
+
         <div class="title">${idx+1}. ${it.productName} (${it.barcode})</div>
         <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)}</div>
         <div class="meta">수금액 ${formatNumber(it.paid)} | 재고금액 ${formatNumber(it.stockAmount)}</div>
         ${it.memo ? `<div class="meta">메모: ${memoSafe}</div>` : ""}
-
-        <div style="margin-top:8px; display:flex; gap:8px;">
-          <button type="button" class="btn btn-gray" data-action="edit" style="margin-top:0;">수정</button>
-          <button type="button" class="btn btn-gray" data-action="del"  style="margin-top:0;">삭제</button>
-        </div>
       </div>
     `;
   });
@@ -422,46 +441,45 @@
     saleCart.render();
 
     cartBox.addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-action]");
-  if (!btn) return;
 
-  const row = e.target.closest(".row");
-  if (!row) return;
+      // ❌ X 클릭 → 삭제
+      const delBtn = e.target.closest(".del-x");
+      if (delBtn) {
+        e.stopPropagation();
 
-  const tempId = row.getAttribute("data-tempid");
-  if (!tempId) return;
+        const row = delBtn.closest(".row");
+        const tempId = row.getAttribute("data-tempid");
 
-  const action = btn.getAttribute("data-action");
+        if (!confirm("이 항목을 삭제할까요?")) return;
 
-  if (action === "edit") {
-    const it = saleCart.items.find(x => x.tempId === tempId);
-    if (!it) return;
+        saleCart.items = saleCart.items.filter(x => x.tempId !== tempId);
+        saleCart.save();
+        saleCart.render();
 
-    editingTempId = tempId;
+        if (editingTempId === tempId) editingTempId = null;
+        return;
+      }
 
-    barcodeEl.value = it.barcode || "";
-    nameEl.value = it.productName || "";
-    priceEl.value = it.price ? formatNumber(it.price) : "";
-    qtyEl.value = it.qty ? formatNumber(it.qty) : "";
-    paidEl.value = it.paid ? formatNumber(it.paid) : "";
-    stockEl.value = it.stockAmount ? formatNumber(it.stockAmount) : "";
-    memoEl.value = it.memo || "";
+      // ✏️ row 클릭 → 수정
+      const row = e.target.closest(".row");
+      if (!row) return;
 
-    formEl.style.display = "block";
-    return;
-  }
+      const tempId = row.getAttribute("data-tempid");
+      const it = saleCart.items.find(x => x.tempId === tempId);
+      if (!it) return;
 
-  if (action === "del") {
-    if (!confirm("이 항목을 삭제할까요?")) return;
+      editingTempId = tempId;
 
-    saleCart.items = saleCart.items.filter(x => x.tempId !== tempId);
-    saleCart.save();
-    saleCart.render();
+      barcodeEl.value = it.barcode || "";
+      nameEl.value = it.productName || "";
+      priceEl.value = it.price ? formatNumber(it.price) : "";
+      qtyEl.value = it.qty ? formatNumber(it.qty) : "";
+      paidEl.value = it.paid ? formatNumber(it.paid) : "";
+      stockEl.value = it.stockAmount ? formatNumber(it.stockAmount) : "";
+      memoEl.value = it.memo || "";
 
-    if (editingTempId === tempId) editingTempId = null;
-    return;
-  }
-});
+      formEl.style.display = "block";
+    });
 
 
     // =========================
