@@ -1,7 +1,3 @@
-// 🔥 반드시 파일 최상단 (DOMContentLoaded 위)
-let editingStoreName = null;
-let editingItemStore = null;
-let editingItemBarcode = null;
 document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // 0) DOM (이 파일이 의존하는 id)
@@ -177,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderStoreRows(store) {
     const items = Object.values(store.items || {});
-    if (!items.length) {
+    if (items.length === 0) {
       return `<div class="empty" style="padding:22px 0;">납품 내역이 없습니다.</div>`;
     }
 
@@ -186,63 +182,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = "";
 
-    // =========================
-    // 1️⃣ 상품 리스트
-    // =========================
+    // 1️⃣ 상품 목록
     items.forEach(it => {
       const name = escapeHtml(it.productName || "-");
       const bc = escapeHtml(it.barcode || "-");
       const qty = Number(it.qty || 0);
-      const price = qty > 0 ? Math.round(it.total / qty) : 0;
-      const total = Math.round(it.total || 0);
+      const amount = Math.round(Number(it.total || 0));
+      const paid = Math.round(Number(it.paid || 0));
+      const unpaid = amount - paid;
 
       html += `
         <div class="store-row">
           <div class="pname">${name}</div>
           <div class="pcode">${bc}</div>
           <div class="pqty">
-            수량 ${qty.toLocaleString()}개 ·
-            단가 ${price.toLocaleString()}원 ·
-            총액 ${total.toLocaleString()}원
-          </div>
-
-          ${it.memos && it.memos.length ? `
-            <div class="pcode">
-              메모:
-              <ul style="margin:4px 0 0 14px; padding:0;">
-                ${it.memos.map(m => `<li>${escapeHtml(m)}</li>`).join("")}
-              </ul>
-            </div>
-          ` : ""}
-
-          <div style="margin-top:8px;">
-            <button
-              class="mini edit"
-              type="button"
-              data-action="edit-item"
-              data-store="${escapeAttr(store.storeName)}"
-              data-barcode="${escapeAttr(it.barcode)}"
-            >
-              상품 수정
-            </button>
+            납품 ${qty.toLocaleString()}개 ·
+            납품금액 ${amount.toLocaleString()}원 ·
+            수금 ${paid.toLocaleString()}원 ·
+            미수금 ${unpaid.toLocaleString()}원
           </div>
         </div>
       `;
     });
 
-    // =========================
-    // 2️⃣ 거래처 정보 + 수정 버튼
-    // =========================
+    // 2️⃣ 거래처 기준 정보 + 수정 버튼  ← 🔥 이게 “1번”
     html += `
-      <div style="margin-top:16px; padding-top:14px; border-top:1px solid #eee;">
+      <div style="margin-top:14px; padding-top:12px; border-top:1px solid #eee;">
         <div style="font-size:13px; margin-bottom:6px;">
-          반품: ${store.returnNote ? escapeHtml(store.returnNote) : "-"}
+          반품: ${escapeHtml(store.returnNote || "-")}
         </div>
-        ${store.storeMemo ? `
-          <div style="font-size:13px; margin-bottom:10px;">
-            메모: ${escapeHtml(store.storeMemo)}
-          </div>
-        ` : ""}
+        <div style="font-size:13px; margin-bottom:6px;">
+          수금액: ${Number(store.paidTotal || 0).toLocaleString()}원
+        </div>
+        <div style="font-size:13px; margin-bottom:10px;">
+          메모: ${escapeHtml(store.storeMemo || "-")}
+        </div>
+
         <button
           class="mini edit"
           type="button"
@@ -331,31 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
     URL.revokeObjectURL(url);
   }
 
-  // =========================
-  // 🧾 거래처 수정 버튼 클릭
-  // =========================
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-action='edit-store']");
-    if (!btn) return;
-
-    editingStoreName = btn.dataset.store;
-
-    const sales = safeJSON(localStorage.getItem("sales_list"));
-    const target = sales.find(s => (s.partner || "") === editingStoreName);
-    if (!target) {
-      alert("거래처 데이터를 찾을 수 없습니다.");
-      return;
-    }
-
-    document.getElementById("edit-store-name").value = editingStoreName;
-    document.getElementById("edit-paid").value = target.paid || "";
-    document.getElementById("edit-return").value = target.returnNote || "";
-    document.getElementById("edit-memo").value = target.storeMemo || "";
-
-    storeEditModal.style.display = "flex";
-  });
-
   tabProduct.addEventListener("click", () => setMode("product"));
   tabStore.addEventListener("click", () => setMode("store"));
 
@@ -381,32 +331,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list.includes(bc)) list.push(bc);
     localStorage.setItem("product_hidden_list", JSON.stringify(list));
     location.reload();
-  });
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-action='edit-item']");
-    if (!btn) return;
-
-    editingItemStore = btn.dataset.store;
-    editingItemBarcode = btn.dataset.barcode;
-
-    const sales = safeJSON(localStorage.getItem("sales_list"));
-
-    const target = sales.find(
-      s => (s.partner || "") === editingItemStore && s.barcode === editingItemBarcode
-    );
-
-    if (!target) {
-      alert("상품 데이터를 찾을 수 없습니다.");
-      return;
-    }
-
-    document.getElementById("edit-item-name").value = target.productName || "";
-    document.getElementById("edit-item-qty").value = target.qty || "";
-    document.getElementById("edit-item-price").value = target.price || "";
-    document.getElementById("edit-item-memo").value = target.memo || "";
-
-    itemEditModal.style.display = "flex";
   });
 
   // =========================
@@ -550,16 +474,12 @@ function buildStoreSummary(sales, avgCostMap) {
         barcode,
         qty: 0,
         total: 0,
-        paid: 0,
-        memos: []   // 🔥 상품별 메모 누적
+        paid: 0
       };
     }
     stores[store].items[barcode].qty += qty;
     stores[store].items[barcode].total += total;
     stores[store].items[barcode].paid += paid;
-    if (s.memo) {
-      stores[store].items[barcode].memos.push(s.memo);
-    }
   });
 
   // 잔고 큰 순
@@ -567,176 +487,3 @@ function buildStoreSummary(sales, avgCostMap) {
     (a, b) => (b.deliveryTotal - b.paidTotal) - (a.deliveryTotal - a.paidTotal)
   );
 }
-// =========================
-// 🧾 거래처 수정 모달
-// =========================
-const storeEditModal = document.createElement("div");
-storeEditModal.style.cssText = `
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-`;
-storeEditModal.innerHTML = `
-  <div style="
-    width:90%;
-    max-width:360px;
-    background:#fff;
-    border-radius:16px;
-    padding:18px;
-  ">
-    <h3 style="margin:0 0 12px; text-align:center;">거래처 수정</h3>
-
-    <div class="field">
-      <label>거래처명</label>
-      <input id="edit-store-name" />
-    </div>
-
-    <div class="field">
-      <label>수금액</label>
-      <input id="edit-paid" inputmode="numeric" />
-    </div>
-
-    <div class="field">
-      <label>반품</label>
-      <input id="edit-return" />
-    </div>
-
-    <div class="field">
-      <label>메모</label>
-      <textarea id="edit-memo"></textarea>
-    </div>
-
-    <button id="btn-store-save" class="btn btn-blue">저장</button>
-    <button id="btn-store-cancel" class="btn btn-gray">취소</button>
-  </div>
-`;
-
-// =========================
-// 📦 상품 수정 모달
-// =========================
-const itemEditModal = document.createElement("div");
-itemEditModal.style.cssText = `
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:10000;
-`;
-itemEditModal.innerHTML = `
-  <div style="
-    width:90%;
-    max-width:360px;
-    background:#fff;
-    border-radius:16px;
-    padding:18px;
-  ">
-    <h3 style="margin:0 0 12px; text-align:center;">상품 수정</h3>
-
-    <div class="field">
-      <label>상품명</label>
-      <input id="edit-item-name" />
-    </div>
-
-    <div class="field">
-      <label>수량</label>
-      <input id="edit-item-qty" inputmode="numeric" />
-    </div>
-
-    <div class="field">
-      <label>단가</label>
-      <input id="edit-item-price" inputmode="numeric" />
-    </div>
-
-    <div class="field">
-      <label>메모</label>
-      <textarea id="edit-item-memo"></textarea>
-    </div>
-
-    <button id="btn-item-save" class="btn btn-blue">저장</button>
-    <button id="btn-item-cancel" class="btn btn-gray">취소</button>
-  </div>
-`;
-document.getElementById("btn-item-save").addEventListener("click", () => {
-  const name = document.getElementById("edit-item-name").value.trim();
-  const qty = Number(document.getElementById("edit-item-qty").value);
-  const price = Number(document.getElementById("edit-item-price").value);
-  const memo = document.getElementById("edit-item-memo").value.trim();
-
-  if (!name || qty <= 0 || price < 0) {
-    alert("상품명, 수량, 단가를 올바르게 입력하세요.");
-    return;
-  }
-
-  const sales = safeJSON(localStorage.getItem("sales_list"));
-
-  sales.forEach(s => {
-    if (
-      (s.partner || "") === editingItemStore &&
-      s.barcode === editingItemBarcode
-    ) {
-      s.productName = name;
-      s.qty = qty;
-      s.price = price;
-      s.memo = memo;
-      s.total = qty * price;
-    }
-  });
-
-  localStorage.setItem("sales_list", JSON.stringify(sales));
-
-  editingItemStore = null;
-  editingItemBarcode = null;
-  itemEditModal.style.display = "none";
-
-  location.reload();
-});
-document.getElementById("btn-item-cancel").addEventListener("click", () => {
-  itemEditModal.style.display = "none";
-  editingItemStore = null;
-  editingItemBarcode = null;
-});
-document.body.appendChild(itemEditModal);
-document.body.appendChild(storeEditModal);
-
-document.getElementById("btn-store-save").addEventListener("click", () => {
-  const newName = document.getElementById("edit-store-name").value.trim();
-  const paid = Number(
-    String(document.getElementById("edit-paid").value).replace(/,/g,"")
-  ) || 0;
-  const returnNote = document.getElementById("edit-return").value.trim();
-  const memo = document.getElementById("edit-memo").value.trim();
-
-  if (!newName) {
-    alert("거래처명은 필수입니다.");
-    return;
-  }
-
-  const sales = safeJSON(localStorage.getItem("sales_list"));
-
-  sales.forEach(s => {
-    if ((s.partner || "") === editingStoreName) {
-      s.partner = newName;
-      s.paid = paid;
-      s.returnNote = returnNote;
-      s.storeMemo = memo;
-    }
-  });
-
-  localStorage.setItem("sales_list", JSON.stringify(sales));
-
-  editingStoreName = null;
-  storeEditModal.style.display = "none";
-
-  location.reload(); // 즉시 반영
-});
-
-document.getElementById("btn-store-cancel").addEventListener("click", () => {
-  storeEditModal.style.display = "none";
-  editingStoreName = null;
-});
