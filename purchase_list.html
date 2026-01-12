@@ -96,6 +96,32 @@ h3{
 }
 
 /* 카드 */
+.card > * {
+  margin-bottom: 6px;   /* ✅ 모든 줄 기본 간격 */
+  line-height: 1.45;    /* ✅ 모바일 가독성 최적 */
+}
+.card .title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+.card .barcode,
+.card .meta {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 6px;
+}
+.card .amount {
+  margin-top: 10px;     /* ⬆ 위 정보와 간격 */
+  font-weight: 700;
+  font-size: 15px;
+}
+.card .meta:last-child {
+  margin-top: 6px;
+}
+.card .badge {
+  margin-bottom: 6px;
+}
 .card{
   position:relative;
   border-radius:16px;
@@ -465,7 +491,7 @@ function render(data){
       <div class="title">${it.name}</div>
       <div class="barcode">바코드 ${it.barcode}</div>
       <div class="meta">${it.date}</div>
-      <div class="meta">수량 ${fmt(it.qty)} · 가격 ${fmt(it.price)}</div>
+      <div class="meta">가격 ${fmt(it.price)} · 수량 ${fmt(it.qty)}</div>
 
       <div class="amount">
         ${it.type === "purchase" ? "매입 총액" : "납품 총액"} ${fmt(it.total)} 원
