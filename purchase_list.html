@@ -40,28 +40,14 @@ h3{
 /* 기간 검색 (AdSense 스타일) */
 .type-box{
   display:flex;
-  gap:5px;
+  gap:5px;                 /* 🔹 -1px */
   align-items:center;
-  padding:5px 7px;
+  padding:9px 0px;         /* 🔹 위아래 -1px / 좌우 -1px */
   border:1px solid #ddd;
-  border-radius:9px;
+  border-radius:9px;       /* 🔹 살짝 둥근 느낌 감소 */
   background:#fff;
   box-shadow:0 2px 6px rgba(0,0,0,.05);
   flex:0 0 auto;
-}
-
-.type-item{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  font-size:13px;
-  color:#333;
-  white-space:nowrap;
-}
-
-.type-item input{
-  width:15px;
-  height:15px;
 }
 .range-row{
   display:flex;
