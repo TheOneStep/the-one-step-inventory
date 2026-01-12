@@ -313,7 +313,7 @@ const purchaseCart={
   render(){
   if(!this.items.length){
     cartBox.innerHTML="<div class='meta'>아직 추가된 항목이 없습니다.</div>";
-    totalEl.textContent="0";
+    totalEl.value = formatNumber(total);
     return;
   }
 
