@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="store-head" data-action="toggle">
           <div class="store-name">🏬 ${storeName}</div>
           <div class="store-right">
-            <div>납품 금액 <span class="money">${delivery.toLocaleString()}원</span></div>
+            <div>납품 총액 <span class="money">${delivery.toLocaleString()}원</span></div>
             <div>수금 금액 <span class="money green">${paid.toLocaleString()}원</span></div>
             <div>미수금 <span class="money red">${unpaid.toLocaleString()}원</span></div>
           </div>
@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderStoreRows(store) {
     const items = Object.values(store.items || {});
-    if (items.length === 0) {
+    if (!items.length) {
       return `<div class="empty" style="padding:22px 0;">납품 내역이 없습니다.</div>`;
     }
 
@@ -182,42 +182,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = "";
 
-    // 1️⃣ 상품 목록
+    // =========================
+    // 1️⃣ 상품 리스트
+    // =========================
     items.forEach(it => {
       const name = escapeHtml(it.productName || "-");
       const bc = escapeHtml(it.barcode || "-");
       const qty = Number(it.qty || 0);
-      const amount = Math.round(Number(it.total || 0));
-      const paid = Math.round(Number(it.paid || 0));
-      const unpaid = amount - paid;
+      const price = qty > 0 ? Math.round(it.total / qty) : 0;
+      const total = Math.round(it.total || 0);
 
       html += `
         <div class="store-row">
           <div class="pname">${name}</div>
           <div class="pcode">${bc}</div>
           <div class="pqty">
-            납품 ${qty.toLocaleString()}개 ·
-            납품금액 ${amount.toLocaleString()}원 ·
-            수금 ${paid.toLocaleString()}원 ·
-            미수금 ${unpaid.toLocaleString()}원
+            수량 ${qty.toLocaleString()}개 ·
+            단가 ${price.toLocaleString()}원 ·
+            총액 ${total.toLocaleString()}원
           </div>
+          ${it.memo ? `<div class="pcode">메모: ${escapeHtml(it.memo)}</div>` : ""}
         </div>
       `;
     });
 
-    // 2️⃣ 거래처 기준 정보 + 수정 버튼  ← 🔥 이게 “1번”
+    // =========================
+    // 2️⃣ 거래처 정보 + 수정 버튼
+    // =========================
     html += `
-      <div style="margin-top:14px; padding-top:12px; border-top:1px solid #eee;">
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid #eee;">
         <div style="font-size:13px; margin-bottom:6px;">
-          반품: ${escapeHtml(store.returnNote || "-")}
+          반품: ${store.returnNote ? escapeHtml(store.returnNote) : "-"}
         </div>
-        <div style="font-size:13px; margin-bottom:6px;">
-          수금액: ${Number(store.paidTotal || 0).toLocaleString()}원
-        </div>
-        <div style="font-size:13px; margin-bottom:10px;">
-          메모: ${escapeHtml(store.storeMemo || "-")}
-        </div>
-
+        ${store.storeMemo ? `
+          <div style="font-size:13px; margin-bottom:10px;">
+            메모: ${escapeHtml(store.storeMemo)}
+          </div>
+        ` : ""}
         <button
           class="mini edit"
           type="button"
@@ -331,6 +332,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list.includes(bc)) list.push(bc);
     localStorage.setItem("product_hidden_list", JSON.stringify(list));
     location.reload();
+  });
+
+  // =========================
+  // 🛠 거래처 수정 버튼 클릭
+  // =========================
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action='edit-store']");
+    if (!btn) return;
+
+    const storeName = btn.getAttribute("data-store");
+    alert(`거래처 수정 클릭됨: ${storeName}`);
   });
 
   // =========================
