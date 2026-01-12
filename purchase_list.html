@@ -413,6 +413,7 @@ let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
     barcode:i.barcode,
     price:n(i.price),
     qty:n(i.qty),
+    total: n(i.price) * n(i.qty),   // ✅ 납품 총액 추가
     memo: i.memo || "",
     createdAt: i.createdAt
   }));
@@ -447,10 +448,9 @@ function render(data){
       <div class="meta">${it.date}</div>
       <div class="meta">수량 ${fmt(it.qty)} · 단가 ${fmt(it.price)}</div>
 
-      ${it.type === "purchase"
-        ? `<div class="amount">총액 ${fmt(it.total)} 원</div>`
-        : ""
-      }
+      <div class="amount">
+        ${it.type === "purchase" ? "총액" : "납품 총액"} ${fmt(it.total)} 원
+      </div>
 
       ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}
     `;
@@ -513,13 +513,12 @@ document.getElementById("btn-range-reset").onclick = ()=>{
 document.getElementById("btn-excel").onclick = ()=>{
   if(!viewList.length){ alert("내보낼 데이터가 없습니다."); return; }
 
-  let csv = "\uFEFF구분,날짜,상품명,바코드,수량,단가,총액\n";
+  let csv = "\uFEFF구분,날짜,상품명,바코드,수량,단가,총액,메모\n";
   viewList.forEach(it=>{
     if(it.type==="purchase"){
-      csv += `매입,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.total}\n`;
+      csv += `매입,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.total},${it.memo || ""}\n`;
     }else{
-      // ✅ 납품은 리스트에서도, 엑셀에서도 상품 단위만
-      csv += `납품,${it.date},${it.name},${it.barcode},${it.qty},${it.price},\n`;
+      csv += `납품,${it.date},${it.name},${it.barcode},${it.qty},${it.price},${it.total},${it.memo || ""}\n`;
     }
   });
 
