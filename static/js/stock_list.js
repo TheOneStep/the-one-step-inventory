@@ -458,6 +458,7 @@ function buildStoreSummary(sales, avgCostMap) {
   const stores = {};
 
   sales.forEach(s => {
+    const memo = (s.memo || "").trim();
     const store = (s.partner || s.storeName || s.customer || "").trim();
     if (!store) return;
 
@@ -499,12 +500,21 @@ function buildStoreSummary(sales, avgCostMap) {
         barcode,
         qty: 0,
         total: 0,
-        paid: 0
+        paid: 0,
+        memo: memo
+        
       };
     }
     stores[store].items[barcode].qty += qty;
     stores[store].items[barcode].total += total;
     stores[store].items[barcode].paid += paid;
+    if (memo) {
+      if (stores[store].items[barcode].memo) {
+        stores[store].items[barcode].memo += "\n" + memo;
+      } else {
+        stores[store].items[barcode].memo = memo;
+      }
+    }
   });
 
   // 잔고 큰 순
