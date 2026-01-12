@@ -209,6 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const amount = Math.round(Number(it.total || 0));
       const price = qty > 0 ? Math.round(amount / qty) : 0;
       const memo = (it.memo || "").trim();
+      const memoId = `memo_${bc}_${Math.random().toString(36).slice(2,8)}`;
 
       html += `
         <div class="store-row">
@@ -222,13 +223,31 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           ${memo ? `
-            <div style="
-              font-size:12px;
-              color:#666;
-              margin-top:4px;
-              padding-left:2px;
-            ">
-              메모: ${escapeHtml(memo)}
+            <div
+              id="${memoId}"
+              class="product-memo collapsed"
+              style="
+                white-space: pre-wrap;
+                font-size:12px;
+                color:#666;
+                margin-top:6px;
+              "
+            >
+              ${escapeHtml(memo)}
+            </div>
+
+            <div
+              class="memo-toggle"
+              data-target="${memoId}"
+              style="
+                font-size:12px;
+                color:#007aff;
+                margin-top:4px;
+                cursor:pointer;
+                user-select:none;
+              "
+            >
+              더보기
             </div>
           ` : ``}
         </div>
