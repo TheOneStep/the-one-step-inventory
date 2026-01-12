@@ -61,7 +61,7 @@ button{border:none;border-radius:999px;margin-top:10px}
 </div>
 
 <div class="field">
-<label>단가</label>
+<label>가격</label>
 <input id="price">
 </div>
 
@@ -95,7 +95,7 @@ function fmt(v) {
 function uncomma(v){
   return String(v || "").replace(/,/g, "");
 }  
-// ✅ 매입 총액 계산 (단가 × 수량)
+// ✅ 매입 총액 계산 (가격 × 수량)
 function updatePurchaseAmount(){
   const price = Number(uncomma(priceEl.value));
   const qty   = Number(uncomma(qtyEl.value));
