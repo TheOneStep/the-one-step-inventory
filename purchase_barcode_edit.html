@@ -71,6 +71,11 @@ button{border:none;border-radius:999px;margin-top:10px}
 </div>
 
 <div class="field">
+  <label>매입 총액</label>
+  <input id="purchaseAmount" readonly>
+</div>
+
+<div class="field">
 <label>메모</label>
 <textarea id="memo"></textarea>
 </div>
@@ -89,7 +94,13 @@ function fmt(v) {
 // ✅ 콤마 제거 (저장용)
 function uncomma(v){
   return String(v || "").replace(/,/g, "");
-}    
+}  
+// ✅ 매입 총액 계산 (단가 × 수량)
+function updatePurchaseAmount(){
+  const price = Number(uncomma(priceEl.value));
+  const qty   = Number(uncomma(qtyEl.value));
+  purchaseAmountEl.value = fmt(price * qty);
+}  
 const params = new URLSearchParams(location.search);
 const editMode = params.get("mode")==="edit";
 const editId = params.get("id");
@@ -103,6 +114,9 @@ const barcodeEl = document.getElementById("barcode");
 const nameEl = document.getElementById("name");
 const priceEl = document.getElementById("price");
 const qtyEl = document.getElementById("qty");
+const purchaseAmountEl = document.getElementById("purchaseAmount");
+priceEl.addEventListener("input", updatePurchaseAmount);
+qtyEl.addEventListener("input", updatePurchaseAmount);
 const memoEl = document.getElementById("memo");
 const cartEl = document.getElementById("cart");
 const titleEl = document.getElementById("title");
@@ -153,6 +167,7 @@ if(editMode && editId){
     nameEl.value=item.name;
     priceEl.value = fmt(item.price);
     qtyEl.value = fmt(item.qty);
+    purchaseAmountEl.value = fmt(item.price * item.qty);
     memoEl.value=item.memo||"";
     cart=[{
       barcode:item.barcode,
@@ -195,7 +210,7 @@ document.getElementById("btnSave").onclick=()=>{
 
   localStorage.setItem("purchase_list",JSON.stringify(list));
   alert(editMode?"매입 수정 완료":"매입 등록 완료");
-  location.href="purchase_list_edit.html";
+  location.href="purchase_list.html";
 };
 </script>
 <script>
