@@ -256,11 +256,12 @@
         <textarea id="memo" placeholder=""></textarea>
       </div>
 
+      <button id="btnAddToCart" class="btn btn-gray">추가</button>
+
       <!-- ✅ 누적 표시 영역 -->
       <div id="cart-list"></div>
 
       <!-- ✅ 누적 추가/저장 버튼 -->
-      <button id="btnAddToCart" class="btn btn-gray">추가</button>
       <button id="btnSaveAll" class="btn btn-blue">전체 등록</button>
     </div>
   </div>
@@ -371,26 +372,41 @@
         this.render();
       },
       render() {
-        if (!this.items.length) {
-          cartBox.innerHTML = "<div class='meta'>아직 추가된 항목이 없습니다. (스캔 → 값 확인 → 추가)</div>";
-          return;
-        }
+  if (!this.items.length) {
+    cartBox.innerHTML = "<div class='meta'>아직 추가된 항목이 없습니다. (스캔 → 값 확인 → 추가)</div>";
+    return;
+  }
 
-        let html = "";
-        this.items.forEach((it, idx) => {
-          const amount = (Number(it.price)||0) * (Number(it.qty)||0);
-          html += `
-            <div class="row">
-              <div class="title">${idx+1}. ${it.productName} (${it.barcode})</div>
-              <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)}</div>
-              <div class="meta">수금액 ${formatNumber(it.paid)} | 재고금액 ${formatNumber(it.stockAmount)}</div>
-              ${it.memo ? `<div class="meta">메모: ${escapeHtml(it.memo)}</div>` : ""}
-            </div>
-          `;
-        });
+  let html = "";
 
-        cartBox.innerHTML = html;
-      }
+  this.items.forEach((it, idx) => {
+    if(!it.tempId) it.tempId = "s_tmp_" + Date.now() + "_" + rand6();
+
+    const memoSafe = String(it.memo||"")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;")
+      .replaceAll("\n","<br>");
+
+    html += `
+      <div class="row" data-tempid="${it.tempId}">
+        <div class="title">${idx+1}. ${it.productName} (${it.barcode})</div>
+        <div class="meta">가격 ${formatNumber(it.price)} | 수량 ${formatNumber(it.qty)}</div>
+        <div class="meta">수금액 ${formatNumber(it.paid)} | 재고금액 ${formatNumber(it.stockAmount)}</div>
+        ${it.memo ? `<div class="meta">메모: ${memoSafe}</div>` : ""}
+
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          <button type="button" class="btn btn-gray" data-action="edit" style="margin-top:0;">수정</button>
+          <button type="button" class="btn btn-gray" data-action="del"  style="margin-top:0;">삭제</button>
+        </div>
+      </div>
+    `;
+  });
+
+  cartBox.innerHTML = html;
+}
     };
 
     function escapeHtml(str){
@@ -404,6 +420,49 @@
 
     saleCart.load();
     saleCart.render();
+
+    cartBox.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+
+  const row = e.target.closest(".row");
+  if (!row) return;
+
+  const tempId = row.getAttribute("data-tempid");
+  if (!tempId) return;
+
+  const action = btn.getAttribute("data-action");
+
+  if (action === "edit") {
+    const it = saleCart.items.find(x => x.tempId === tempId);
+    if (!it) return;
+
+    editingTempId = tempId;
+
+    barcodeEl.value = it.barcode || "";
+    nameEl.value = it.productName || "";
+    priceEl.value = it.price ? formatNumber(it.price) : "";
+    qtyEl.value = it.qty ? formatNumber(it.qty) : "";
+    paidEl.value = it.paid ? formatNumber(it.paid) : "";
+    stockEl.value = it.stockAmount ? formatNumber(it.stockAmount) : "";
+    memoEl.value = it.memo || "";
+
+    formEl.style.display = "block";
+    return;
+  }
+
+  if (action === "del") {
+    if (!confirm("이 항목을 삭제할까요?")) return;
+
+    saleCart.items = saleCart.items.filter(x => x.tempId !== tempId);
+    saleCart.save();
+    saleCart.render();
+
+    if (editingTempId === tempId) editingTempId = null;
+    return;
+  }
+});
+
 
     // =========================
     // 5) 바코드 인식 시 폼 열기 + 바코드/상품마스터 자동 채우기
@@ -429,45 +488,58 @@
     // =========================
     // 6) [추가] 버튼: 현재 입력값을 카트로 누적
     // =========================
-    btnAdd.addEventListener("click", () => {
-      const item = {
-        barcode: barcodeEl.value.trim(),
-        productName: nameEl.value.trim(),
-        price: parseNumber(priceEl.value),
-        qty: parseNumber(qtyEl.value),
-        paid: parseNumber(paidEl.value),
-        stockAmount: parseNumber(priceEl.value) * parseNumber(qtyEl.value),
-        memo: memoEl.value.trim()
-      };
+    // ✅ 수정모드 상태
+let editingTempId = null;
 
-      if (!item.barcode || !item.productName) {
-        alert("바코드와 상품명은 필수입니다.");
-        return;
-      }
-      if (item.qty <= 0) {
-        alert("수량은 1 이상이어야 합니다.");
-        return;
-      }
+btnAdd.addEventListener("click", () => {
+  const item = {
+    tempId: editingTempId || ("s_tmp_" + Date.now() + "_" + rand6()),
+    barcode: barcodeEl.value.trim(),
+    productName: nameEl.value.trim(),
+    price: parseNumber(priceEl.value),
+    qty: parseNumber(qtyEl.value),
+    paid: parseNumber(paidEl.value),
+    stockAmount: parseNumber(priceEl.value) * parseNumber(qtyEl.value),
+    memo: memoEl.value.trim()
+  };
 
+  if (!item.barcode || !item.productName) {
+    alert("바코드와 상품명은 필수입니다.");
+    return;
+  }
+  if (item.qty <= 0) {
+    alert("수량은 1 이상이어야 합니다.");
+    return;
+  }
+
+  if (editingTempId) {
+    const idx = saleCart.items.findIndex(x => x.tempId === editingTempId);
+    if (idx >= 0) {
+      saleCart.items[idx] = item;
+      saleCart.save();
+      saleCart.render();
+    } else {
       saleCart.add(item);
+    }
+  } else {
+    saleCart.add(item);
+  }
 
-      // 📌 상품마스터에 마지막 입력값 저장 (이후 자동 채움 용도)
-      if (window.ProductMaster) {
-        ProductMaster.set(item.barcode, { name: item.productName, price: item.price });
-      }
+  if (window.ProductMaster) {
+    ProductMaster.set(item.barcode, { name: item.productName, price: item.price });
+  }
 
-      // 입력 초기화 (연속 스캔 대비)
-      barcodeEl.value = "";
-      nameEl.value = "";
-      priceEl.value = "";
-      qtyEl.value = "";
-      paidEl.value = "";
-      stockEl.value = "";
-      memoEl.value = "";
+  editingTempId = null;
 
-      // 화면 상단 인식 결과도 초기화(선택)
-      barcodeSpan.textContent = "없음";
-    });
+  barcodeEl.value = "";
+  nameEl.value = "";
+  priceEl.value = "";
+  qtyEl.value = "";
+  paidEl.value = "";
+  stockEl.value = "";
+  memoEl.value = "";
+  barcodeSpan.textContent = "없음";
+});
 
     // =========================
     // 7) [전체 등록] 버튼: sales_list에 저장
