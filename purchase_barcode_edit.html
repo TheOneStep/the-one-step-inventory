@@ -195,7 +195,7 @@ document.getElementById("btnSave").onclick=()=>{
 
   localStorage.setItem("purchase_list",JSON.stringify(list));
   alert(editMode?"매입 수정 완료":"매입 등록 완료");
-  location.href="/app/view/barcode/purchase_list.html";
+  location.href="purchase_list_edit.html";
 };
 </script>
 <script>
@@ -208,7 +208,7 @@ if (isIOS) {
   alert("아이폰은 바코드 스캔을 지원하지 않습니다.");
 } else {
   const script = document.createElement("script");
-  script.src = "/app/static/js/barcode_android.js?v=" + Date.now();
+  script.src = "static/js/barcode_android.js?v=" + Date.now();
   script.onload = () => {
     if (window.initBarcodeAndroid) {
       window.initBarcodeAndroid({
