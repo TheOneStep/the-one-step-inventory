@@ -64,9 +64,9 @@ if (!key || !id) {
         <div class="row"><div class="label">상품명</div><div class="value">${item.name || ""}</div></div>
         <div class="row"><div class="label">바코드</div><div class="value">${item.barcode || ""}</div></div>
         <div class="row"><div class="label">매입일자</div><div class="value">${item.purchaseDate || ""}</div></div>
+        <div class="row"><div class="label">가격</div><div class="value">${fmt(item.price)}</div></div>
         <div class="row"><div class="label">수량</div><div class="value">${fmt(item.qty)}</div></div>
-        <div class="row"><div class="label">단가</div><div class="value">${fmt(item.price)}</div></div>
-        <div class="row"><div class="label">총액</div><div class="value">${fmt(item.price * item.qty)}</div></div>
+        <div class="row"><div class="label">매입 총액</div><div class="value">${fmt(item.price * item.qty)}</div></div>
 
         ${item.memo ? `
           <div class="row">
@@ -80,7 +80,7 @@ if (!key || !id) {
     }
 
     /* ======================
-       🟥 납품(매출) 상세
+       🟥 납품 상세
     ====================== */
     else if (key === "sales_list") {
       box.innerHTML = `
@@ -90,10 +90,9 @@ if (!key || !id) {
         <div class="row"><div class="label">바코드</div><div class="value">${item.barcode || ""}</div></div>
         <div class="row"><div class="label">납품일자</div><div class="value">${item.saleDate || ""}</div></div>
         <div class="row"><div class="label">거래처</div><div class="value">${item.partner || ""}</div></div>
+        <div class="row"><div class="label">가격</div><div class="value">${fmt(item.price)}</div></div>
         <div class="row"><div class="label">수량</div><div class="value">${fmt(item.qty)}</div></div>
-        <div class="row"><div class="label">단가</div><div class="value">${fmt(item.price)}</div></div>
-        <div class="row"><div class="label">수금액</div><div class="value">${fmt(item.paid)}</div></div>
-        <div class="row"><div class="label">재고금액</div><div class="value">${fmt(item.price * item.qty)}</div></div>
+        <div class="row"><div class="label">납품 총액</div><div class="value">${fmt(item.price * item.qty)}</div></div>
 
         ${item.memo ? `
           <div class="row">
