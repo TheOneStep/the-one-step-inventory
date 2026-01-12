@@ -99,6 +99,16 @@ function fmt(v) {
 function uncomma(v){
   return String(v || "").replace(/,/g, "");
 } 
+function commaInput(el){
+  el.addEventListener("input", () => {
+    const raw = uncomma(el.value);
+    if (raw === "") {
+      el.value = "";
+      return;
+    }
+    el.value = fmt(raw);
+  });
+}
 const params = new URLSearchParams(location.search);
 const editMode = params.get("mode")==="edit";
 const editId = params.get("id");
@@ -128,6 +138,8 @@ function updateStockAmount(){
 // ✅ 여기!
 priceEl.addEventListener("input", updateStockAmount);
 qtyEl.addEventListener("input", updateStockAmount);
+commaInput(priceEl);
+commaInput(qtyEl);
 
 // ✅ [스캔] 버튼 클릭 연결 (지금은 함수가 없어서 alert만 뜸)
 // barcode_android.js 연동을 붙이면 여기서 카메라가 열리게 됨
@@ -178,7 +190,6 @@ if(editMode && editId){
     nameEl.value=item.productName;
     priceEl.value = fmt(item.price);
     qtyEl.value = fmt(item.qty);
-    paidEl.value = fmt(item.paid);
     stockAmountEl.value = fmt(item.price * item.qty);
     memoEl.value=item.memo||"";
     cart=[{
@@ -193,6 +204,9 @@ if(editMode && editId){
 }
 
 document.getElementById("btnSave").onclick=()=>{
+  const price = Number(uncomma(priceEl.value));
+  const qty   = Number(uncomma(qtyEl.value));
+  const total = price * qty;
   let list=JSON.parse(localStorage.getItem("sales_list")||"[]");
 
   // ✅ 수정/저장 시 cart를 input 값으로 강제 동기화
@@ -201,6 +215,7 @@ document.getElementById("btnSave").onclick=()=>{
     productName: nameEl.value,
     price: Number(uncomma(priceEl.value)),
     qty: Number(uncomma(qtyEl.value)),
+    total,
     memo: memoEl.value
   }];
 
