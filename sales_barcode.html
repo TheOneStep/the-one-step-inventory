@@ -229,7 +229,7 @@
         "
       ></div>
     </div>
-
+    
     <!-- 5) 인식 결과 -->
     <div id="result-box" style="margin-top:12px; font-size:15px; text-align:center;">
       인식 결과: <span id="barcode-value">없음</span>
@@ -383,6 +383,18 @@
       stockEl.value = stockAmount > 0 ? formatNumber(stockAmount) : "";
     }
 
+    // =========================
+    // ✅ 3-2) 카트 기준 재고금액 누적 계산
+    // =========================
+    function updateStockAmountFromCart() {
+      const total = saleCart.items.reduce(
+        (sum, it) => sum + Number(it.stockAmount || 0),
+        0
+      );
+
+      stockEl.value = total > 0 ? formatNumber(total) : "";
+    }
+
     // 가격/수량 입력 중에도 실시간 반영
     priceEl.addEventListener("input", updateStockAmountAuto);
     qtyEl.addEventListener("input", updateStockAmountAuto);
@@ -416,6 +428,7 @@
         this.items = [];
         this.save();
         this.render();
+        stockEl.value = "";
       },
       render() {
   if (!this.items.length) {
@@ -478,6 +491,7 @@
         saleCart.items = saleCart.items.filter(x => x.tempId !== tempId);
         saleCart.save();
         saleCart.render();
+        updateStockAmountFromCart();
 
         if (editingTempId === tempId) editingTempId = null;
         return;
@@ -539,6 +553,7 @@ btnAdd.addEventListener("click", () => {
     productName: nameEl.value.trim(),
     price: parseNumber(priceEl.value),
     qty: parseNumber(qtyEl.value),
+    stockAmount: parseNumber(priceEl.value) * parseNumber(qtyEl.value),
     memo: memoEl.value.trim()
   };
 
@@ -557,6 +572,7 @@ btnAdd.addEventListener("click", () => {
       saleCart.items[idx] = item;
       saleCart.save();
       saleCart.render();
+      updateStockAmountFromCart();
     } else {
       saleCart.add(item);
     }
