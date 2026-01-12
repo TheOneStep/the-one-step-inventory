@@ -1,3 +1,7 @@
+// 🔥 반드시 파일 최상단 (DOMContentLoaded 위)
+let editingStoreName = null;
+let editingItemStore = null;
+let editingItemBarcode = null;
 document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // 0) DOM (이 파일이 의존하는 id)
@@ -201,7 +205,27 @@ document.addEventListener("DOMContentLoaded", () => {
             단가 ${price.toLocaleString()}원 ·
             총액 ${total.toLocaleString()}원
           </div>
-          ${it.memo ? `<div class="pcode">메모: ${escapeHtml(it.memo)}</div>` : ""}
+
+          ${it.memos && it.memos.length ? `
+            <div class="pcode">
+              메모:
+              <ul style="margin:4px 0 0 14px; padding:0;">
+                ${it.memos.map(m => `<li>${escapeHtml(m)}</li>`).join("")}
+              </ul>
+            </div>
+          ` : ""}
+
+          <div style="margin-top:8px;">
+            <button
+              class="mini edit"
+              type="button"
+              data-action="edit-item"
+              data-store="${escapeAttr(store.storeName)}"
+              data-barcode="${escapeAttr(it.barcode)}"
+            >
+              상품 수정
+            </button>
+          </div>
         </div>
       `;
     });
@@ -310,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // 🧾 거래처 수정 버튼 클릭
   // =========================
-  let editingStoreName = null;
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action='edit-store']");
@@ -360,14 +383,30 @@ document.addEventListener("DOMContentLoaded", () => {
     location.reload();
   });
 
-  // =========================
-  // 🛠 거래처 수정 버튼 클릭
-  // =========================
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-action='edit-store']");
+    const btn = e.target.closest("[data-action='edit-item']");
     if (!btn) return;
 
-    const storeName = btn.getAttribute("data-store");
+    editingItemStore = btn.dataset.store;
+    editingItemBarcode = btn.dataset.barcode;
+
+    const sales = safeJSON(localStorage.getItem("sales_list"));
+
+    const target = sales.find(
+      s => (s.partner || "") === editingItemStore && s.barcode === editingItemBarcode
+    );
+
+    if (!target) {
+      alert("상품 데이터를 찾을 수 없습니다.");
+      return;
+    }
+
+    document.getElementById("edit-item-name").value = target.productName || "";
+    document.getElementById("edit-item-qty").value = target.qty || "";
+    document.getElementById("edit-item-price").value = target.price || "";
+    document.getElementById("edit-item-memo").value = target.memo || "";
+
+    itemEditModal.style.display = "flex";
   });
 
   // =========================
@@ -511,12 +550,16 @@ function buildStoreSummary(sales, avgCostMap) {
         barcode,
         qty: 0,
         total: 0,
-        paid: 0
+        paid: 0,
+        memos: []   // 🔥 상품별 메모 누적
       };
     }
     stores[store].items[barcode].qty += qty;
     stores[store].items[barcode].total += total;
     stores[store].items[barcode].paid += paid;
+    if (s.memo) {
+      stores[store].items[barcode].memos.push(s.memo);
+    }
   });
 
   // 잔고 큰 순
@@ -571,6 +614,94 @@ storeEditModal.innerHTML = `
     <button id="btn-store-cancel" class="btn btn-gray">취소</button>
   </div>
 `;
+
+// =========================
+// 📦 상품 수정 모달
+// =========================
+const itemEditModal = document.createElement("div");
+itemEditModal.style.cssText = `
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+`;
+itemEditModal.innerHTML = `
+  <div style="
+    width:90%;
+    max-width:360px;
+    background:#fff;
+    border-radius:16px;
+    padding:18px;
+  ">
+    <h3 style="margin:0 0 12px; text-align:center;">상품 수정</h3>
+
+    <div class="field">
+      <label>상품명</label>
+      <input id="edit-item-name" />
+    </div>
+
+    <div class="field">
+      <label>수량</label>
+      <input id="edit-item-qty" inputmode="numeric" />
+    </div>
+
+    <div class="field">
+      <label>단가</label>
+      <input id="edit-item-price" inputmode="numeric" />
+    </div>
+
+    <div class="field">
+      <label>메모</label>
+      <textarea id="edit-item-memo"></textarea>
+    </div>
+
+    <button id="btn-item-save" class="btn btn-blue">저장</button>
+    <button id="btn-item-cancel" class="btn btn-gray">취소</button>
+  </div>
+`;
+document.getElementById("btn-item-save").addEventListener("click", () => {
+  const name = document.getElementById("edit-item-name").value.trim();
+  const qty = Number(document.getElementById("edit-item-qty").value);
+  const price = Number(document.getElementById("edit-item-price").value);
+  const memo = document.getElementById("edit-item-memo").value.trim();
+
+  if (!name || qty <= 0 || price < 0) {
+    alert("상품명, 수량, 단가를 올바르게 입력하세요.");
+    return;
+  }
+
+  const sales = safeJSON(localStorage.getItem("sales_list"));
+
+  sales.forEach(s => {
+    if (
+      (s.partner || "") === editingItemStore &&
+      s.barcode === editingItemBarcode
+    ) {
+      s.productName = name;
+      s.qty = qty;
+      s.price = price;
+      s.memo = memo;
+      s.total = qty * price;
+    }
+  });
+
+  localStorage.setItem("sales_list", JSON.stringify(sales));
+
+  editingItemStore = null;
+  editingItemBarcode = null;
+  itemEditModal.style.display = "none";
+
+  location.reload();
+});
+document.getElementById("btn-item-cancel").addEventListener("click", () => {
+  itemEditModal.style.display = "none";
+  editingItemStore = null;
+  editingItemBarcode = null;
+});
+document.body.appendChild(itemEditModal);
 document.body.appendChild(storeEditModal);
 
 document.getElementById("btn-store-save").addEventListener("click", () => {
