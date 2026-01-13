@@ -146,13 +146,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
       card.innerHTML = `
         <div class="store-head" data-action="toggle">
-          <div class="store-name">🏬 ${storeName}</div>
+          <div class="store-name">
+          🏬 ${storeName}
+          <button
+            class="mini edit-store"
+            data-store="${escapeAttr(store.storeName)}"
+            style="margin-left:6px;"
+          >수정</button>
+        </div>
           <div class="store-right">
-            <div>납품 금액 <span class="money">${delivery.toLocaleString()}원</span></div>
+            <div>납품 총액 <span class="money">${delivery.toLocaleString()}원</span></div>
             <div>수금 금액 <span class="money green">${paid.toLocaleString()}원</span></div>
             <div>미수금 <span class="money red">${unpaid.toLocaleString()}원</span></div>
+            ${store.returnNote ? `
+              <div style="font-size:12px; color:#666;">
+                반품 ${escapeHtml(store.returnNote)}
+              </div>
+            ` : ``}
           </div>
         </div>
+
+        ${store.storeMemo ? `
+          <div style="
+            padding:8px 14px;
+            font-size:13px;
+            color:#666;
+            background:#f7f7f7;
+            border-radius:8px;
+            margin:8px 0;
+          ">
+            메모: ${escapeHtml(store.storeMemo)}
+          </div>
+        ` : ``}
+
         <div class="store-body">
           ${renderStoreRows(store)}
         </div>
@@ -171,6 +197,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".edit-store");
+    if (!btn) return;
+
+    const oldStoreName = btn.dataset.store;
+    const newStoreName = prompt("거래처명을 수정하세요", oldStoreName);
+    if (!newStoreName) return;
+
+    const newPaid = prompt("수금 금액을 입력하세요 (숫자)", "");
+    if (newPaid === null) return;
+
+    const paidValue = Number(newPaid.replace(/,/g,"")) || 0;
+
+    // 🔥 sales_list 직접 수정
+    let changed = false;
+    sales.forEach(s => {
+      if ((s.partner || s.storeName || "") === oldStoreName) {
+        s.partner = newStoreName;   // 거래처명 변경
+        s.paid = paidValue;         // 수금 금액 변경
+        changed = true;
+      }
+    });
+
+    if (!changed) {
+      alert("수정할 데이터가 없습니다.");
+      return;
+    }
+
+    localStorage.setItem("sales_list", JSON.stringify(sales));
+
+    // 🔁 재계산 후 다시 렌더
+    storeData = buildStoreSummary(sales, avgCostMap);
+    renderStoreView();
+
+    alert("거래처 정보가 수정되었습니다.");
+  });
+
   function renderStoreRows(store) {
     const items = Object.values(store.items || {});
     if (items.length === 0) {
@@ -188,46 +251,52 @@ document.addEventListener("DOMContentLoaded", () => {
       const bc = escapeHtml(it.barcode || "-");
       const qty = Number(it.qty || 0);
       const amount = Math.round(Number(it.total || 0));
-      const paid = Math.round(Number(it.paid || 0));
-      const unpaid = amount - paid;
+      const price = qty > 0 ? Math.round(amount / qty) : 0;
+      const memo = (it.memo || "").trim();
+      const memoId = `memo_${bc}_${Math.random().toString(36).slice(2,8)}`;
 
       html += `
         <div class="store-row">
           <div class="pname">${name}</div>
           <div class="pcode">${bc}</div>
+
           <div class="pqty">
+            가격 ${price.toLocaleString()}원 ·
             납품 ${qty.toLocaleString()}개 ·
-            납품금액 ${amount.toLocaleString()}원 ·
-            수금 ${paid.toLocaleString()}원 ·
-            미수금 ${unpaid.toLocaleString()}원
+            납품금액 ${amount.toLocaleString()}원
           </div>
+
+          ${memo ? `
+            <div
+              id="${memoId}"
+              class="product-memo collapsed"
+              style="
+                white-space: pre-wrap;
+                font-size:12px;
+                color:#666;
+                margin-top:6px;
+              "
+            >
+              ${escapeHtml(memo)}
+            </div>
+
+            <div
+              class="memo-toggle"
+              data-target="${memoId}"
+              style="
+                font-size:12px;
+                color:#007aff;
+                margin-top:4px;
+                cursor:pointer;
+                user-select:none;
+              "
+            >
+              더보기
+            </div>
+          ` : ``}
         </div>
       `;
     });
-
-    // 2️⃣ 거래처 기준 정보 + 수정 버튼  ← 🔥 이게 “1번”
-    html += `
-      <div style="margin-top:14px; padding-top:12px; border-top:1px solid #eee;">
-        <div style="font-size:13px; margin-bottom:6px;">
-          반품: ${escapeHtml(store.returnNote || "-")}
-        </div>
-        <div style="font-size:13px; margin-bottom:6px;">
-          수금액: ${Number(store.paidTotal || 0).toLocaleString()}원
-        </div>
-        <div style="font-size:13px; margin-bottom:10px;">
-          메모: ${escapeHtml(store.storeMemo || "-")}
-        </div>
-
-        <button
-          class="mini edit"
-          type="button"
-          data-action="edit-store"
-          data-store="${escapeAttr(store.storeName)}"
-        >
-          수정
-        </button>
-      </div>
-    `;
 
     return html;
   }
@@ -433,6 +502,9 @@ function buildStoreSummary(sales, avgCostMap) {
   const stores = {};
 
   sales.forEach(s => {
+    const memo = (s.memo || "").trim();
+    const storeMemo = (s.storeMemo || "").trim();
+    const returnNote = (s.returnNote || "").trim();
     const store = (s.partner || s.storeName || s.customer || "").trim();
     if (!store) return;
 
@@ -456,16 +528,36 @@ function buildStoreSummary(sales, avgCostMap) {
       stores[store] = {
         storeName: store,
 
-        // 🔽 새 기준
-        deliveryTotal: 0, // 납품 금액 (가격 × 수량)
-        paidTotal: 0,     // 수금 금액
+        deliveryTotal: 0,
+        paidTotal: 0,
+
+        // ✅ 거래처 기준 메모
+        storeMemo: "",
+        returnNote: "",
+
         items: {}
       };
     }
     // ✅ 납품 금액 누적
     stores[store].deliveryTotal += total;
     // ✅ 수금 금액 누적
-    stores[store].paidTotal += paid;
+
+      stores[store].paidTotal += paid;
+    // ✅ 약국 메모(storeMemo) 누적
+    if (storeMemo) {
+      if (!stores[store].storeMemo.includes(storeMemo)) {
+        stores[store].storeMemo +=
+          (stores[store].storeMemo ? "\n" : "") + storeMemo;
+      }
+    }
+
+    // ✅ 반품 메모(returnNote) 누적
+    if (returnNote) {
+      if (!stores[store].returnNote.includes(returnNote)) {
+        stores[store].returnNote +=
+          (stores[store].returnNote ? "\n" : "") + returnNote;
+      }
+    }
 
     // 아이템 묶기
     if (!stores[store].items[barcode]) {
@@ -474,12 +566,21 @@ function buildStoreSummary(sales, avgCostMap) {
         barcode,
         qty: 0,
         total: 0,
-        paid: 0
+        paid: 0,
+        memo: ""
+        
       };
     }
     stores[store].items[barcode].qty += qty;
     stores[store].items[barcode].total += total;
     stores[store].items[barcode].paid += paid;
+    if (memo) {
+      if (stores[store].items[barcode].memo) {
+        stores[store].items[barcode].memo += "\n" + memo;
+      } else {
+        stores[store].items[barcode].memo = memo;
+      }
+    }
   });
 
   // 잔고 큰 순
