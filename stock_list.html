@@ -233,6 +233,81 @@
       max-height: 38px;
       overflow: hidden;
     }
+    /* ===== 거래처 카드 헤더 ===== */
+    .store-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    /* 좌측: 거래처명 + 수정 버튼 */
+    .store-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .store-name {
+      font-weight: 600;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    /* 수정 버튼 */
+    .btn-edit {
+      border: none;
+      background: #eef4ff;
+      color: #007aff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-edit:active {
+      opacity: 0.7;
+    }
+
+    /* 우측 금액 영역 */
+    .store-right {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: nowrap; /* ✅ 줄바꿈 완전 차단 */
+    }
+
+    /* 한 줄씩 정렬 */
+    .store-right .row {
+      display: block;
+    }
+
+    /* 금액 */
+    .money {
+      font-weight: 600;
+      white-space: nowrap; /* ✅ 숫자+원 분리 방지 */
+    }
+
+    .money.green { color: #1a9f38; }
+    .money.red { color: #d93025; }
+
+    /* 반품 메모 */
+    .return-note {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    /* 거래처 메모 */
+    .store-memo {
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #666;
+      background: #f7f7f7;
+      border-radius: 8px;
+      margin: 8px 0;
+    }
   </style>
 </head>
 
