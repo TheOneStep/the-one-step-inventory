@@ -380,7 +380,6 @@ imgInput.addEventListener("change", async () => {
   imgPreview.src = currentImageBase64;
   imgPreview.style.display = "block";
 });
-
 const imgBtn = document.getElementById("btn-image");
 const imgPreview = document.getElementById("image-preview");
 
@@ -605,6 +604,56 @@ const observer=new MutationObserver(()=>{
   }
 });
 observer.observe(barcodeSpan,{childList:true});
+
+btnAdd.addEventListener("click", () => {
+  const item = {
+    // ✅ 수정 중이면 기존 tempId 유지, 아니면 신규 생성
+    tempId: editingTempId || ("p_tmp_" + Date.now() + "_" + rand6()),
+    barcode: barcodeEl.value.trim(),
+    name: nameEl.value.trim(),
+    price: parseNumber(priceEl.value),
+    qty: parseNumber(qtyEl.value),
+    memo: memoEl.value.trim(),
+    image: currentImageBase64   // ✅ 추가
+  };
+
+  if (!item.barcode || !item.name) { alert("바코드와 상품명은 필수입니다."); return; }
+  if (item.qty <= 0) { alert("수량은 1 이상이어야 합니다."); return; }
+
+  // ✅ 수정이면 교체, 신규면 기존 add 로직 사용(동일 바코드 합산 규칙 유지)
+  if (editingTempId) {
+    const idx = purchaseCart.items.findIndex(x => x.tempId === editingTempId);
+    if (idx >= 0) {
+      purchaseCart.items[idx] = item;
+      purchaseCart.save();
+      purchaseCart.render();
+    } else {
+      // 혹시 못 찾으면 신규로
+      purchaseCart.add(item);
+    }
+  } else {
+    purchaseCart.add(item);
+  }
+
+  if (window.ProductMaster) {
+    ProductMaster.set(item.barcode, { name: item.name, price: item.price });
+  }
+
+  // ✅ 입력 초기화 + 수정모드 종료
+  editingTempId = null;
+
+  barcodeEl.value = "";
+  nameEl.value = "";
+  priceEl.value = "";
+  qtyEl.value = "";
+  memoEl.value = "";
+  barcodeSpan.textContent = "없음";
+
+  /* ⬇⬇⬇ 여기 바로 추가 ⬇⬇⬇ */
+  currentImageBase64 = null;
+  imgPreview.style.display = "none";
+  imgInput.value = "";
+});
 
 btnSaveAll.addEventListener("click",()=>{
   if(!purchaseCart.items.length){
