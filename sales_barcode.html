@@ -256,6 +256,19 @@
         <label>상품명</label>
         <input type="text" id="input-name" placeholder="">
       </div>
+      <div id="name-suggest"
+          style="
+            display:none;
+            background:#fff;
+            border:1px solid #ddd;
+            border-radius:8px;
+            margin-top:4px;
+            max-height:160px;
+            overflow-y:auto;
+            text-align:left;
+            font-size:14px;
+          ">
+      </div>
 
       <div class="field">
         <label>가격</label>
@@ -325,6 +338,42 @@
     }
     function rand6() {
       return Math.random().toString(36).slice(2, 8);
+    }
+
+    // =========================
+    // 📚 모든 상품명 + 바코드 수집
+    // =========================
+    function getAllProducts() {
+      const map = new Map();
+
+      // 1️⃣ 상품 마스터
+      if (window.ProductMaster?.getAll) {
+        const all = ProductMaster.getAll();
+        for (const bc in all) {
+          if (all[bc]?.name) {
+            map.set(all[bc].name, bc);
+          }
+        }
+      }
+
+      // 2️⃣ 기존 매입
+      const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+      purchases.forEach(p => {
+        const name = p.name || p.productName;
+        if (name && p.barcode) {
+          map.set(name, p.barcode);
+        }
+      });
+
+      // 3️⃣ 기존 납품
+      const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
+      sales.forEach(s => {
+        if (s.productName && s.barcode) {
+          map.set(s.productName, s.barcode);
+        }
+      });
+
+      return Array.from(map.entries()); // [ [name, barcode], ... ]
     }
 
     // =========================
@@ -408,6 +457,37 @@
 
     const barcodeEl = document.getElementById("input-barcode");
     const nameEl    = document.getElementById("input-name");
+    const suggestBox = document.getElementById("name-suggest");
+
+    nameEl.addEventListener("input", () => {
+      const keyword = nameEl.value.trim();
+      if (keyword.length < 2) {
+        suggestBox.style.display = "none";
+        return;
+      }
+
+      const list = getAllProducts();
+      const matches = list.filter(([name]) =>
+        name.includes(keyword)
+      );
+
+      if (!matches.length) {
+        suggestBox.style.display = "none";
+        return;
+      }
+
+      suggestBox.innerHTML = matches.map(([name, bc]) => `
+        <div
+          style="padding:8px 10px; cursor:pointer;"
+          data-barcode="${bc}"
+          data-name="${name}"
+        >
+          ${name}
+        </div>
+      `).join("");
+
+      suggestBox.style.display = "block";
+    });
     const priceEl   = document.getElementById("price");
     // =========================
     // ✍️ 상품명 입력 → 바코드 자동 채우기
@@ -817,6 +897,26 @@ btnAdd.addEventListener("click", () => {
       };
       document.body.appendChild(script);
     }
+    suggestBox.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-barcode]");
+      if (!item) return;
+
+      const name = item.dataset.name;
+      const barcode = item.dataset.barcode;
+
+      nameEl.value = name;
+      barcodeEl.value = barcode;
+
+      suggestBox.style.display = "none";
+
+      // 기존 자동 채우기 로직 재사용
+      autoFillByBarcode({
+        barcode,
+        partner: partnerEl.value.trim(),
+        nameEl,
+        priceEl
+      });
+    });
   </script>
 </body>
 </html>
