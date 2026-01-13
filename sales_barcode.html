@@ -263,6 +263,14 @@
         >
       </div>
 
+      <div class="field" id="purchase-image-box" style="display:none;">
+        <label>상품 이미지 (최근 매입)</label>
+        <img
+          id="purchase-image"
+          style="max-width:100%; border-radius:10px;"
+        >
+      </div>
+
       <div class="field">
         <label>상품명</label>
         <input type="text" id="input-name" placeholder="">
@@ -350,6 +358,26 @@
     function rand6() {
       return Math.random().toString(36).slice(2, 8);
     }
+
+    // =========================
+    // 🖼️ 최근 매입 이미지 찾기
+    // =========================
+    function findLatestPurchaseImage(barcode) {
+      if (!barcode) return null;
+
+      const list = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+
+      // 최신 매입부터 역순 검색
+      for (let i = list.length - 1; i >= 0; i--) {
+        const it = list[i];
+        if (it.barcode === barcode && it.image) {
+          return it.image;
+        }
+      }
+      return null;
+    }
+
+    
 
     // =========================
     // 📚 모든 상품명 + 바코드 수집
@@ -467,6 +495,8 @@
     const formEl      = document.getElementById("product-form");
 
     const barcodeEl = document.getElementById("input-barcode");
+    const purchaseImageBox = document.getElementById("purchase-image-box");
+    const purchaseImageEl  = document.getElementById("purchase-image");
     const nameEl    = document.getElementById("input-name");
     const suggestBox = document.getElementById("name-suggest");
 
@@ -536,6 +566,14 @@
         nameEl,
         priceEl
       });
+
+      const img = findLatestPurchaseImage(code);
+      if (img) {
+        purchaseImageEl.src = img;
+        purchaseImageBox.style.display = "block";
+      } else {
+        purchaseImageBox.style.display = "none";
+      }  
     });
     const qtyEl     = document.getElementById("qty");
     const paidEl    = document.getElementById("paid");
@@ -733,6 +771,13 @@
         nameEl,
         priceEl
       });
+      const img = findLatestPurchaseImage(code);
+      if (img) {
+        purchaseImageEl.src = img;
+        purchaseImageBox.style.display = "block";
+      } else {
+        purchaseImageBox.style.display = "none";
+      }
     });
     observer.observe(barcodeSpan, { childList: true });
 
