@@ -66,6 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
     clearEmpty();
     listBox.innerHTML = "";
 
+    const productImageMap = JSON.parse(
+      localStorage.getItem("product_image_map") || "{}"
+    );
+
     const kw = keyword();
     const filtered = !kw
       ? visibleStockList
@@ -105,30 +109,31 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `<button class="mini danger" type="button" data-action="hide" data-barcode="${escapeAttr(item.barcode || "")}">숨김</button>`
         : "";
 
-      card.innerHTML = `
-        <div class="card">
+         const imgSrc = productImageMap[item.barcode] || "";
 
-          ${item.image ? `
-            <div class="thumb-wrap">
-              <img
-                src="${item.image}"
-                class="thumb-img"
-                data-img="${item.image}"
-              >
+          card.innerHTML = `
+            <div class="card">
+
+              ${imgSrc ? `
+                <div class="thumb-wrap">
+                  <img
+                    src="${imgSrc}"
+                    class="thumb-img"
+                    data-img="${imgSrc}"
+                  >
+                </div>
+              ` : ``}
+              <div class="card-top">
+                <div>
+                  <p class="card-title">${escapeHtml(item.productName || "-")}</p>
+                  <div class="card-meta">바코드 ${escapeHtml(item.barcode || "-")}</div>
+                </div>
+                <span class="badge ${badgeClass}">${badgeText}</span>
+              </div>
+
             </div>
-          ` : ``}
-
-          <div class="card-top">
-            <div>
-              <p class="card-title">${escapeHtml(item.productName || "-")}</p>
-              <div class="card-meta">바코드 ${escapeHtml(item.barcode || "-")}</div>
-            </div>
-            <span class="badge ${badgeClass}">${badgeText}</span>
-          </div>
-
-        </div>
-      `;
-        
+          `;
+            
 
       listBox.appendChild(card);
     });
@@ -648,3 +653,21 @@ function buildStoreSummary(sales, avgCostMap) {
     (a, b) => (b.deliveryTotal - b.paidTotal) - (a.deliveryTotal - a.paidTotal)
   );
 }
+
+// 🖼 썸네일 클릭 → 크게 보기
+document.addEventListener("click", (e) => {
+  const img = e.target.closest(".thumb-img");
+  if (!img) return;
+
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+  if (!modal || !view) return;
+
+  view.src = img.dataset.img;
+  modal.style.display = "flex";
+});
+
+// ❌ 모달 클릭 → 닫기
+document.getElementById("img-modal")?.addEventListener("click", () => {
+  document.getElementById("img-modal").style.display = "none";
+});
