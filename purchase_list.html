@@ -500,6 +500,10 @@ const chkPartner = document.getElementById("chk-partner");
 function n(v){ return Number(v)||0; }
 function fmt(v){ return (Number(v)||0).toLocaleString("ko-KR"); }
 
+const productImageMap = JSON.parse(
+  localStorage.getItem("product_image_map") || "{}"
+);
+
 let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
   .map(i => ({
     _key:"purchase_list",
@@ -512,7 +516,7 @@ let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
     qty:n(i.qty),
     total:n(i.price)*n(i.qty),
     memo: i.memo || "",   // ✅ 추가
-    image: i.image || null,   // ✅ 추가
+    image: productImageMap[i.barcode] || null,   // ✅ 추가
     createdAt: i.createdAt   // ✅ 핵심
   }));
 
@@ -529,7 +533,7 @@ let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
     qty:n(i.qty),
     total: n(i.price) * n(i.qty),   // ✅ 납품 총액 추가
     memo: i.memo || "",
-    image: i.image || null,   // ✅ 추가
+    image: productImageMap[i.barcode] || null,   // ✅ 추가
     createdAt: i.createdAt
   }));
 
