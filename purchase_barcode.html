@@ -424,6 +424,7 @@ function loadImageByBarcode(barcode) {
 
   if (map[barcode]) {
     imgPreview.src = map[barcode];
+    imgPreview.dataset.img = map[barcode]; // ✅ 추가
     imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = map[barcode];
     return;
@@ -437,6 +438,7 @@ function loadImageByBarcode(barcode) {
   const foundPurchase = purchases.find(p => p.barcode === barcode && p.image);
   if (foundPurchase) {
     imgPreview.src = foundPurchase.image;
+    imgPreview.dataset.img = foundPurchase.image; // ✅ 추가
     imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = foundPurchase.image;
 
@@ -454,6 +456,7 @@ function loadImageByBarcode(barcode) {
   const foundSale = sales.find(s => s.barcode === barcode && s.image);
   if (foundSale) {
     imgPreview.src = foundSale.image;
+    imgPreview.dataset.img = foundSale.image; // ✅ 추가
     imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = foundSale.image;
 
@@ -866,6 +869,8 @@ if (isIOS) {
 document.addEventListener("click", (e) => {
   const img = e.target.closest(".product-thumb");
   if (!img) return;
+
+  if (!img.dataset.img) return; // ✅ 안전 가드 추가
 
   const modal = document.getElementById("img-modal");
   const view  = document.getElementById("img-modal-view");
