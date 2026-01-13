@@ -523,7 +523,7 @@ function buildStoreSummary(sales, avgCostMap) {
         qty: 0,
         total: 0,
         paid: 0,
-        memo: memo
+        memo: ""
         
       };
     }
