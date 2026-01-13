@@ -122,20 +122,200 @@
     }
     .mini.danger{ background:#ffecec; color:#b42318; }
 
-    /* =========================
-      Store card (거래처 카드)
-      ========================= */
+    /* Store card */
+    .store-head{ display:flex; justify-content:space-between; align-items:flex-start; cursor:pointer; }
+    .store-name{ font-weight:800; font-size:16px; }
+    .store-right{ text-align:right; font-size:12px; color:var(--sub); }
+    .money{ font-weight:800; font-size:13px; }
+    .money.red{ color:#b42318; }
+    .money.green{ color:#0a7d00; }
+    .store-body{ display:none; margin-top:12px; border-top:1px solid #f0f0f0; padding-top:12px; }
+    .store-row{ padding:10px 0; border-bottom:1px dashed #e5e5e5; }
+    .store-row:last-child{ border-bottom:none; }
+    .store-row .pname{ font-weight:700; }
+    .store-row .pcode{ color:var(--sub); font-size:12px; margin-top:4px; }
+    .store-row .pqty{ margin-top:6px; font-size:13px; }
 
-    /* 카드 헤더 */
+    /* AdSense placeholder */
+    .adsense{
+      margin:18px 0 0;
+      padding:16px;
+      border:1px dashed #c9c9c9;
+      border-radius:16px;
+      text-align:center;
+      color:#9a9a9a;
+      background:rgba(255,255,255,.55);
+      font-size:13px;
+    }
+    /* 엑셀 버튼 (거래목록과 동일 톤) */
+    .excel-btn{
+      padding:10px 14px;
+      font-size:14px;
+      border-radius:10px;
+      border:1px solid #007aff;
+      background:#eef5ff;
+      color:#007aff;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .excel-row{
+      margin:6px 0 18px;
+      display:flex;
+      justify-content:center;  /* ✅ 가운데 정렬 */
+    }
+
+    /* 🔵 검색 라벨 가운데 정렬 */
+    .search-label{
+      text-align: center;
+    }
+
+    /* 🔵 입력값 + placeholder 가운데 정렬 */
+    .search-input{
+      text-align: center;
+    }
+
+    /* 🔵 placeholder 가운데 정렬 (브라우저별 대응) */
+    .search-input::placeholder{
+      text-align: center;
+    }
+    .search-input::-webkit-input-placeholder{
+      text-align: center;
+    }
+    .search-input:-ms-input-placeholder{
+      text-align: center;
+    }
+    /* 🔝 상단 공통 네비 */
+    .top-nav{
+      display:flex;
+      gap:10px;
+      margin:0 0 12px;   /* ⬅️ 위 여백 제거 */
+    }
+
+    .nav-btn{
+      flex:1;
+      padding:12px 0;
+      border-radius:999px;
+      border:1px solid #d0d7e2;
+      background:#ffffff;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      color:#333;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+    }
+
+    .nav-btn:hover{
+      background:#eef4ff;
+    }
+
+    /* 현재 페이지 표시 */
+    .nav-btn.active{
+      background:#007aff;
+      color:#fff;
+      border-color:#007aff;
+    }
+    /* 거래처 카드 헤더 오른쪽 정렬 보강 */
+    .store-right{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px; /* 돈/버튼 간격 */
+    }
+
+    /* 거래처 수정 버튼 */
+    .mini.edit{
+      background:#eef5ff;
+      color:#007aff;
+      border:1px solid #cfe2ff;
+    }
+    .product-memo.collapsed {
+      max-height: 38px;
+      overflow: hidden;
+    }
+    /* ===== 거래처 카드 헤더 ===== */
     .store-head {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 12px;
+    }
+
+    /* 좌측: 거래처명 + 수정 버튼 */
+    .store-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .store-name {
+      font-weight: 600;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    /* 수정 버튼 */
+    .btn-edit {
+      border: none;
+      background: #eef4ff;
+      color: #007aff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
       cursor: pointer;
     }
 
-    /* 좌측 영역: 업체명 + 수정 버튼 (세로 정렬) */
+    .btn-edit:active {
+      opacity: 0.7;
+    }
+
+    /* 우측 금액 영역 */
+    .store-right {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: nowrap; /* ✅ 줄바꿈 완전 차단 */
+    }
+
+    /* 한 줄씩 정렬 */
+    .store-right .row {
+      display: block;
+    }
+
+    /* 금액 */
+    .money {
+      font-weight: 600;
+      white-space: nowrap; /* ✅ 숫자+원 분리 방지 */
+    }
+
+    .money.green { color: #1a9f38; }
+    .money.red { color: #d93025; }
+
+    /* 반품 메모 */
+    .return-note {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    /* 거래처 메모 */
+    .store-memo {
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #666;
+      background: #f7f7f7;
+      border-radius: 8px;
+      margin: 8px 0;
+    }
+    /* ===== 거래처 카드 헤더 ===== */
+    .store-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    /* 좌측 영역: 세로 정렬 */
     .store-left {
       display: flex;
       flex-direction: column;
@@ -147,12 +327,11 @@
       font-weight: 600;
       font-size: 15px;
       line-height: 1.3;
-      white-space: nowrap;
     }
 
     /* 수정 버튼 */
     .btn-edit {
-      margin-top: 6px; /* 업체명 아래 간격 */
+      margin-top: 6px;            /* ✅ 1cm 느낌의 여백 */
       border: none;
       background: #eef4ff;
       color: #007aff;
@@ -171,10 +350,9 @@
       text-align: right;
       font-size: 13px;
       line-height: 1.5;
-      white-space: nowrap; /* 숫자 + 원 줄바꿈 방지 */
+      white-space: nowrap;        /* ✅ 줄바꿈 방지 */
     }
 
-    /* 금액 한 줄씩 */
     .store-right .row {
       display: block;
     }
@@ -186,7 +364,7 @@
     }
 
     .money.green { color: #1a9f38; }
-    .money.red   { color: #d93025; }
+    .money.red { color: #d93025; }
 
     /* 반품 메모 */
     .return-note {
@@ -203,44 +381,6 @@
       background: #f7f7f7;
       border-radius: 8px;
       margin: 8px 0;
-    }
-
-    /* 상세 목록 */
-    .store-body {
-      display: none;
-      margin-top: 12px;
-      border-top: 1px solid #f0f0f0;
-      padding-top: 12px;
-    }
-
-    .store-row {
-      padding: 10px 0;
-      border-bottom: 1px dashed #e5e5e5;
-    }
-
-    .store-row:last-child {
-      border-bottom: none;
-    }
-
-    .store-row .pname {
-      font-weight: 700;
-    }
-
-    .store-row .pcode {
-      color: var(--sub);
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .store-row .pqty {
-      margin-top: 6px;
-      font-size: 13px;
-    }
-
-    /* 상품 메모 접기 */
-    .product-memo.collapsed {
-      max-height: 38px;
-      overflow: hidden;
     }
 
     .search-label,
