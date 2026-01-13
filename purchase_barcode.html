@@ -144,6 +144,27 @@ textarea { resize:vertical; min-height:60px; }
 .del-x:hover {
   color: #ff3b30;
 }
+
+/* =========================
+   🖼 상품 이미지 미리보기 고정 사이즈
+   ========================= */
+.product-image-box {
+  width: 100%;
+  max-width: 320px;      /* 🔥 우리가 쓰던 기준 */
+  height: 320px;         /* 🔥 스캐너와 동일 */
+  margin: 8px auto 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f7f7f7;
+  display: none;         /* 기본 숨김 */
+}
+
+.product-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* 🔥 절대 꽉 채우지 않음 */
+  border-radius: 12px;
+}
 </style>
 </head>
 
@@ -222,11 +243,8 @@ textarea { resize:vertical; min-height:60px; }
         📷 사진 찍기
       </button>
 
-      <div style="margin-top:8px;">
-        <img
-          id="image-preview"
-          style="max-width:100%; border-radius:10px; display:none;"
-        >
+      <div class="product-image-box" id="image-box">
+        <img id="image-preview">
       </div>
     </div>
 
@@ -367,6 +385,7 @@ const dateEl = document.getElementById("purchaseDate");
 const barcodeSpan = document.getElementById("barcode-value");
 const formEl = document.getElementById("product-form");
 const imgPreview = document.getElementById("image-preview");
+const imgBox = document.getElementById("image-box");
 
 const barcodeEl = document.getElementById("input-barcode");
 barcodeEl.addEventListener("change", () => {
@@ -386,7 +405,8 @@ let currentImageBase64 = null;
 
 function loadImageByBarcode(barcode) {
   if (!barcode) {
-    imgPreview.style.display = "none";
+    imgBox.style.display = "none";   // 🔥 box 기준
+    imgPreview.src = "";
     currentImageBase64 = null;
     return;
   }
@@ -398,7 +418,7 @@ function loadImageByBarcode(barcode) {
 
   if (map[barcode]) {
     imgPreview.src = map[barcode];
-    imgPreview.style.display = "block";
+    imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = map[barcode];
     return;
   }
@@ -411,7 +431,7 @@ function loadImageByBarcode(barcode) {
   const foundPurchase = purchases.find(p => p.barcode === barcode && p.image);
   if (foundPurchase) {
     imgPreview.src = foundPurchase.image;
-    imgPreview.style.display = "block";
+    imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = foundPurchase.image;
 
     // ⭐ 발견된 이미지를 공용 맵으로 승격 저장
@@ -428,7 +448,7 @@ function loadImageByBarcode(barcode) {
   const foundSale = sales.find(s => s.barcode === barcode && s.image);
   if (foundSale) {
     imgPreview.src = foundSale.image;
-    imgPreview.style.display = "block";
+    imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = foundSale.image;
 
     map[barcode] = foundSale.image;
@@ -437,7 +457,8 @@ function loadImageByBarcode(barcode) {
   }
 
   // ❌ 아무 것도 없을 때
-  imgPreview.style.display = "none";
+  imgBox.style.display = "none";
+  imgPreview.src = "";
   currentImageBase64 = null;
 }
 
@@ -450,7 +471,7 @@ imgInput.addEventListener("change", async () => {
   currentImageBase64 = await compressImage(file);
 
   imgPreview.src = currentImageBase64;
-  imgPreview.style.display = "block";
+  imgBox.style.display = "block";
 });
 // ✅ 버튼 2개(파일 선택 / 카메라 촬영)
 const btnImageFile = document.getElementById("btn-image-file");
@@ -747,7 +768,8 @@ btnAdd.addEventListener("click", () => {
 
   /* ⬇⬇⬇ 여기 바로 추가 ⬇⬇⬇ */
   currentImageBase64 = null;
-  imgPreview.style.display = "none";
+  imgPreview.src = "";
+  imgBox.style.display = "none";
   imgInput.value = "";
 });
 
