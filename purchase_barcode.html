@@ -387,19 +387,6 @@ imgBtn.addEventListener("click", () => {
   imgInput.click();
 });
 
-imgInput.addEventListener("change", () => {
-  const file = imgInput.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    currentImageBase64 = reader.result;
-    imgPreview.src = currentImageBase64;
-    imgPreview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
-});
-
 nameEl.addEventListener("input", () => {
   const keyword = nameEl.value.trim();
   if (keyword.length < 2) {
