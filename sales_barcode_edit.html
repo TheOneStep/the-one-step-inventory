@@ -93,6 +93,10 @@ h3 {
   text-align: center;    /* 글자 중앙 */
   margin-bottom: 6px;
 }
+
+#image-box {
+  cursor: zoom-in;
+}
 </style>
 </head>
 
@@ -393,16 +397,19 @@ if (isIOS) {
 // 🖼 이미지 클릭 → 크게 보기
 // 수정 화면의 이미지 박스에서 이미지를 클릭하면 크게 보여주고, 배경을 클릭하면 닫습니다.
 document.addEventListener("click", (e) => {
-  // sales 수정 화면에서 이미지 박스 내부 이미지만 대상으로 함
-  const img = e.target.closest("#image-box img");
-  if (!img) return;
-  const src = img.dataset.img || img.src;
-  if (!src) return;
+  const box = e.target.closest("#image-box");
+  if (!box) return;
+
+  const img = box.querySelector("img");
+  if (!img || !img.src) return;
+
   const modal = document.getElementById("img-modal");
   const view  = document.getElementById("img-modal-view");
-  view.src = src;
+
+  view.src = img.src;
   modal.style.display = "flex";
 });
+
 // ❌ 모달 클릭 → 닫기
 document.getElementById("img-modal").addEventListener("click", () => {
   document.getElementById("img-modal").style.display = "none";
