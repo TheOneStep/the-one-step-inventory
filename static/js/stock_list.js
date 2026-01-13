@@ -130,6 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="badge ${badgeClass}">${badgeText}</span>
             </div>
           `;
+
+          // Remove any unintended borders or backgrounds from nested divs inside product cards.
+          // Some browsers may apply default border or box-shadow to nested blocks which results in a thin inner border at the top of each card.
+          // By explicitly clearing these styles here we make sure only the outer card has a shadow/border.
+          card.querySelectorAll('div').forEach(el => {
+            el.style.border = 'none';
+            el.style.boxShadow = 'none';
+            el.style.background = 'transparent';
+          });
             
 
       listBox.appendChild(card);
