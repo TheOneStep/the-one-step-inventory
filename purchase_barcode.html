@@ -368,6 +368,9 @@ const barcodeSpan = document.getElementById("barcode-value");
 const formEl = document.getElementById("product-form");
 
 const barcodeEl = document.getElementById("input-barcode");
+barcodeEl.addEventListener("change", () => {
+  loadImageByBarcode(barcodeEl.value.trim());
+});
 const nameEl = document.getElementById("input-name");
 const suggestBox = document.getElementById("name-suggest");
 
@@ -379,6 +382,22 @@ const memoEl = document.getElementById("memo");
 // 📷 상품 이미지 처리
 // =======================
 let currentImageBase64 = null;
+
+function loadImageByBarcode(barcode) {
+  const map = JSON.parse(
+    localStorage.getItem("product_image_map") || "{}"
+  );
+
+  if (map[barcode]) {
+    imgPreview.src = map[barcode];
+    imgPreview.style.display = "block";
+    currentImageBase64 = map[barcode];
+  } else {
+    imgPreview.style.display = "none";
+    currentImageBase64 = null;
+  }
+}
+
 
 const imgInput = document.getElementById("input-image");
 imgInput.addEventListener("change", async () => {
@@ -601,6 +620,7 @@ cartBox.addEventListener("click", (e) => {
 
   barcodeEl.value = it.barcode || "";
   nameEl.value = it.name || "";
+  loadImageByBarcode(it.barcode);
   priceEl.value = it.price ? formatNumber(it.price) : "";
   qtyEl.value = it.qty ? formatNumber(it.qty) : "";
   memoEl.value = it.memo || "";
@@ -627,22 +647,9 @@ const observer=new MutationObserver(()=>{
     }
   }
 
-  // 3️⃣ ⭐⭐⭐ 바코드 기준 상품 이미지 자동 표시 (핵심)
-  const imageMap = JSON.parse(
-    localStorage.getItem("product_image_map") || "{}"
-  );
-
-  if (imageMap[code]) {
-    imgPreview.src = imageMap[code];
-    imgPreview.style.display = "block";
-
-    // 중요: 기존 이미지도 현재 이미지로 세팅
-    currentImageBase64 = imageMap[code];
-  } else {
-    imgPreview.style.display = "none";
-    currentImageBase64 = null;
-  }
-});
+  loadImageByBarcode(code);
+}); 
+ 
 observer.observe(barcodeSpan, { childList:true });
 
 btnAdd.addEventListener("click", () => {
