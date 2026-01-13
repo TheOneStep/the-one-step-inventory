@@ -459,6 +459,8 @@ function buildStoreSummary(sales, avgCostMap) {
 
   sales.forEach(s => {
     const memo = (s.memo || "").trim();
+    const storeMemo = (s.storeMemo || "").trim();
+    const returnNote = (s.returnNote || "").trim();
     const store = (s.partner || s.storeName || s.customer || "").trim();
     if (!store) return;
 
@@ -482,16 +484,36 @@ function buildStoreSummary(sales, avgCostMap) {
       stores[store] = {
         storeName: store,
 
-        // 🔽 새 기준
-        deliveryTotal: 0, // 납품 금액 (가격 × 수량)
-        paidTotal: 0,     // 수금 금액
+        deliveryTotal: 0,
+        paidTotal: 0,
+
+        // ✅ 거래처 기준 메모
+        storeMemo: "",
+        returnNote: "",
+
         items: {}
       };
     }
     // ✅ 납품 금액 누적
     stores[store].deliveryTotal += total;
     // ✅ 수금 금액 누적
-    stores[store].paidTotal += paid;
+
+      stores[store].paidTotal += paid;
+    // ✅ 약국 메모(storeMemo) 누적
+    if (storeMemo) {
+      if (!stores[store].storeMemo.includes(storeMemo)) {
+        stores[store].storeMemo +=
+          (stores[store].storeMemo ? "\n" : "") + storeMemo;
+      }
+    }
+
+    // ✅ 반품 메모(returnNote) 누적
+    if (returnNote) {
+      if (!stores[store].returnNote.includes(returnNote)) {
+        stores[store].returnNote +=
+          (stores[store].returnNote ? "\n" : "") + returnNote;
+      }
+    }
 
     // 아이템 묶기
     if (!stores[store].items[barcode]) {
