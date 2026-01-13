@@ -199,12 +199,15 @@ function goEdit() {
 // 거래 상세 페이지의 대표 이미지를 크게 표시하고, 배경을 클릭하면 닫습니다.
 document.addEventListener("click", (e) => {
   const card = e.target.closest(".img-card");
-  if (!img) return;
-  const src = img.dataset.img || img.src;
-  if (!src) return;
+  if (!card) return;
+
+  const img = card.querySelector("img");
+  if (!img || !img.src) return;
+
   const modal = document.getElementById("img-modal");
   const view  = document.getElementById("img-modal-view");
-  view.src = src;
+
+  view.src = img.src;
   modal.style.display = "flex";
 });
 document.getElementById("img-modal").addEventListener("click", () => {
