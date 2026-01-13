@@ -146,35 +146,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
       card.innerHTML = `
         <div class="store-head" data-action="toggle">
-          <div class="store-name">
-          🏬 ${storeName}
-          <button
-            class="mini edit-store"
-            data-store="${escapeAttr(store.storeName)}"
-            style="margin-left:6px;"
-          >수정</button>
-        </div>
+          <div class="store-left">
+            <span class="store-name">🏬 ${storeName}</span>
+            <button
+              class="btn-edit"
+              data-store="${escapeAttr(store.storeName)}"
+            >수정</button>
+          </div>
+
           <div class="store-right">
-            <div>납품 총액 <span class="money">${delivery.toLocaleString()}원</span></div>
-            <div>수금 금액 <span class="money green">${paid.toLocaleString()}원</span></div>
-            <div>미수금 <span class="money red">${unpaid.toLocaleString()}원</span></div>
+            <div class="row">
+              납품 총액 <span class="money">${delivery.toLocaleString()}원</span>
+            </div>
+            <div class="row">
+              수금 금액 <span class="money green">${paid.toLocaleString()}원</span>
+            </div>
+            <div class="row">
+              미수금 <span class="money red">${unpaid.toLocaleString()}원</span>
+            </div>
             ${store.returnNote ? `
-              <div style="font-size:12px; color:#666;">
-                반품 ${escapeHtml(store.returnNote)}
-              </div>
+              <div class="return-note">반품 ${escapeHtml(store.returnNote)}</div>
             ` : ``}
           </div>
         </div>
 
         ${store.storeMemo ? `
-          <div style="
-            padding:8px 14px;
-            font-size:13px;
-            color:#666;
-            background:#f7f7f7;
-            border-radius:8px;
-            margin:8px 0;
-          ">
+          <div class="store-memo">
             메모: ${escapeHtml(store.storeMemo)}
           </div>
         ` : ``}
