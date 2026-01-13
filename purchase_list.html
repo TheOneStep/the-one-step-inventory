@@ -387,11 +387,15 @@ input[type="date"]::-webkit-datetime-edit-day-field {
   font-weight:600;
   cursor:pointer;
 }
-/* 🖼 리스트 썸네일 */
 .thumb-wrap{
   display:flex;
   gap:12px;
-  align-items:flex-start;
+  align-items:center;   /* ✅ 핵심 */
+}
+
+.thumb-img{
+  width:72px;
+  height:72px;
 }
 
 .thumb-img{
