@@ -178,7 +178,9 @@ function goEdit() {
     location.href = "sales_barcode_edit.html?mode=edit&id=" + id;
   }
 }
-function openImage(src) {
+function openImage(e, src) {
+  e.stopPropagation(); // 🔥 이 한 줄이 핵심
+
   const modal = document.getElementById("img-modal");
   const view  = document.getElementById("img-modal-view");
   if (!modal || !view) return;
@@ -208,8 +210,10 @@ function openImage(src) {
 <script>
 
 /* ❌ 모달 클릭 → 닫기 */
-document.getElementById("img-modal").addEventListener("click", () => {
-  document.getElementById("img-modal").style.display = "none";
+document.getElementById("img-modal").addEventListener("click", (e) => {
+  if (e.target.id === "img-modal") {
+    e.currentTarget.style.display = "none";
+  }
 });
 </script>
 </body>
