@@ -328,6 +328,76 @@
     }
 
     // =========================
+    // 🔎 상품명으로 바코드 찾기 (납품용)
+    // =========================
+    function findBarcodeByName(productName) {
+      if (!productName) return "";
+
+      const name = productName.trim();
+
+      // 1️⃣ 상품 마스터
+      if (window.ProductMaster) {
+        const all = ProductMaster.getAll?.() || {};
+        for (const bc in all) {
+          if ((all[bc].name || "") === name) {
+            return bc;
+          }
+        }
+      }
+
+      // 2️⃣ 기존 매입 데이터
+      const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+      const p = purchases.find(x => (x.name || x.productName) === name);
+      if (p) return p.barcode || "";
+
+      // 3️⃣ 기존 납품 데이터
+      const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
+      const s = sales.find(x => x.productName === name);
+      if (s) return s.barcode || "";
+
+      return "";
+    }
+    // =========================
+    // 📦 바코드 기준 자동 채우기 (공통)
+    // =========================
+    function autoFillByBarcode({
+      barcode,
+      partner = "",
+      nameEl,
+      priceEl
+    }) {
+      if (!barcode) return;
+
+      // 1️⃣ 상품 마스터
+      if (window.ProductMaster) {
+        const m = ProductMaster.get(barcode);
+        if (m && !nameEl.value) {
+          nameEl.value = m.name || "";
+        }
+      }
+
+      // 2️⃣ 거래처 기준 납품 가격 (납품 화면)
+      if (partner && window.SalesPriceMaster && priceEl) {
+        const p = SalesPriceMaster.get(partner, barcode);
+        if (p && !priceEl.value) {
+          priceEl.value = formatNumber(p);
+        }
+      }
+
+      // 3️⃣ 기존 매입 / 납품 데이터에서 상품명 보완
+      const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+      const sales     = JSON.parse(localStorage.getItem("sales_list") || "[]");
+
+      const found =
+        purchases.find(p => p.barcode === barcode) ||
+        sales.find(s => s.barcode === barcode);
+
+      if (found && !nameEl.value) {
+        nameEl.value = found.productName || found.name || "";
+      }
+    }
+
+    // =========================
     // 1) DOM
     // =========================
     const saleDateEl = document.getElementById("saleDate");
@@ -339,6 +409,43 @@
     const barcodeEl = document.getElementById("input-barcode");
     const nameEl    = document.getElementById("input-name");
     const priceEl   = document.getElementById("price");
+    // =========================
+    // ✍️ 상품명 입력 → 바코드 자동 채우기
+    // =========================
+    nameEl.addEventListener("input", () => {
+      const name = nameEl.value.trim();
+      if (!name) return;
+
+      // 이미 바코드가 있으면 덮어쓰지 않음
+      if (barcodeEl.value) return;
+
+      const foundBarcode = findBarcodeByName(name);
+      if (!foundBarcode) return;
+
+      barcodeEl.value = foundBarcode;
+
+      // 바코드가 채워졌으니 기존 바코드 기준 자동 채우기 로직 실행
+      autoFillByBarcode({
+        barcode: foundBarcode,
+        partner: partnerEl.value.trim(),
+        nameEl,
+        priceEl
+      });
+    });
+    // =========================
+    // ✍️ 바코드 직접 입력 시 자동 채우기
+    // =========================
+    barcodeEl.addEventListener("input", () => {
+      const code = barcodeEl.value.trim();
+      if (!code) return;
+
+      autoFillByBarcode({
+        barcode: code,
+        partner: typeof partnerEl !== "undefined" ? partnerEl.value.trim() : "",
+        nameEl,
+        priceEl
+      });
+    });
     const qtyEl     = document.getElementById("qty");
     const paidEl    = document.getElementById("paid");
     const stockEl   = document.getElementById("stockAmount");
@@ -529,22 +636,12 @@
       barcodeEl.value = code;
       formEl.style.display = "block";
 
-      // 상품마스터에서 '기억된 값' 불러오기 (값이 비어 있을 때만)
-      let remembered = null;
-      if (window.ProductMaster) remembered = ProductMaster.get(code);
-
-      if (remembered) {
-        if (!nameEl.value) nameEl.value = remembered.name || "";
-      }
-
-      // ✅ 거래처 기준 납품 가격 자동 입력
-      const storeName = partnerEl.value.trim();
-      if (storeName && window.SalesPriceMaster) {
-        const rememberedPrice = SalesPriceMaster.get(storeName, code);
-        if (rememberedPrice && !priceEl.value) {
-          priceEl.value = formatNumber(rememberedPrice);
-        }
-      }
+      autoFillByBarcode({
+        barcode: code,
+        partner: typeof partnerEl !== "undefined" ? partnerEl.value.trim() : "",
+        nameEl,
+        priceEl
+      });
     });
     observer.observe(barcodeSpan, { childList: true });
 
