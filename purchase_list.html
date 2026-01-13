@@ -504,6 +504,40 @@ const productImageMap = JSON.parse(
   localStorage.getItem("product_image_map") || "{}"
 );
 
+// =====================================
+// 🔄 기존 데이터에 바코드 이미지 자동 주입
+// =====================================
+function applyProductImageToAllData() {
+  let changed = false;
+
+  // 매입
+  let purchasesRaw = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+  purchasesRaw.forEach(item => {
+    if (!item.image && item.barcode && productImageMap[item.barcode]) {
+      item.image = productImageMap[item.barcode];
+      changed = true;
+    }
+  });
+
+  // 납품
+  let salesRaw = JSON.parse(localStorage.getItem("sales_list") || "[]");
+  salesRaw.forEach(item => {
+    if (!item.image && item.barcode && productImageMap[item.barcode]) {
+      item.image = productImageMap[item.barcode];
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    localStorage.setItem("purchase_list", JSON.stringify(purchasesRaw));
+    localStorage.setItem("sales_list", JSON.stringify(salesRaw));
+    console.log("✅ 바코드 기준 이미지가 기존 데이터에 자동 반영됨");
+  }
+}
+
+// ⭐ 페이지 로드시 한 번 실행
+applyProductImageToAllData();
+
 let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
   .map(i => ({
     _key:"purchase_list",
