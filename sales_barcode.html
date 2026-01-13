@@ -583,6 +583,7 @@ btnAdd.addEventListener("click", () => {
       updateStockAmountFromCart();
     } else {
       saleCart.add(item);
+      updateStockAmountFromCart(); // ✅ 누적 재고금액 계산
     }
   } else {
     saleCart.add(item);
