@@ -504,14 +504,6 @@ const productImageMap = JSON.parse(
   localStorage.getItem("product_image_map") || "{}"
 );
 
-if (item.barcode && imageData) {
-  productImageMap[item.barcode] = imageData;
-  localStorage.setItem(
-    "product_image_map",
-    JSON.stringify(productImageMap)
-  );
-}
-
 let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
   .map(i => ({
     _key:"purchase_list",
