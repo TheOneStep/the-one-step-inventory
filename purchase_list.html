@@ -516,7 +516,7 @@ let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
     qty:n(i.qty),
     total:n(i.price)*n(i.qty),
     memo: i.memo || "",   // ✅ 추가
-    image: productImageMap[i.barcode] || null,   // ✅ 추가
+    image: productImageMap[i.barcode] || i.image || null,   // ✅ 추가
     createdAt: i.createdAt   // ✅ 핵심
   }));
 
@@ -533,7 +533,7 @@ let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
     qty:n(i.qty),
     total: n(i.price) * n(i.qty),   // ✅ 납품 총액 추가
     memo: i.memo || "",
-    image: productImageMap[i.barcode] || null,   // ✅ 추가
+    image: productImageMap[i.barcode] || i.image || null,   // ✅ 추가
     createdAt: i.createdAt
   }));
 
