@@ -204,12 +204,22 @@ textarea { resize:vertical; min-height:60px; }
         style="display:none;"
       >
 
+      <!-- ✅ 파일 선택(갤러리/파일) -->
       <button
         type="button"
         class="btn btn-gray"
-        id="btn-image"
+        id="btn-image-file"
       >
-        📷 상품 사진 찍기
+        🖼 이미지 파일 선택
+      </button>
+
+      <!-- ✅ 카메라 촬영 -->
+      <button
+        type="button"
+        class="btn btn-gray"
+        id="btn-image-camera"
+      >
+        📷 사진 찍기
       </button>
 
       <div style="margin-top:8px;">
@@ -380,10 +390,19 @@ imgInput.addEventListener("change", async () => {
   imgPreview.src = currentImageBase64;
   imgPreview.style.display = "block";
 });
-const imgBtn = document.getElementById("btn-image");
-const imgPreview = document.getElementById("image-preview");
+// ✅ 버튼 2개(파일 선택 / 카메라 촬영)
+const btnImageFile = document.getElementById("btn-image-file");
+const btnImageCamera = document.getElementById("btn-image-camera");
 
-imgBtn.addEventListener("click", () => {
+// 🖼 파일/갤러리 선택 우선 (capture 제거)
+btnImageFile.addEventListener("click", () => {
+  imgInput.removeAttribute("capture");
+  imgInput.click();
+});
+
+// 📷 카메라 촬영 우선 (capture=environment)
+btnImageCamera.addEventListener("click", () => {
+  imgInput.setAttribute("capture", "environment");
   imgInput.click();
 });
 
