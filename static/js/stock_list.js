@@ -112,25 +112,22 @@ document.addEventListener("DOMContentLoaded", () => {
          const imgSrc = productImageMap[item.barcode] || "";
 
           card.innerHTML = `
-            <div class="card">
-
-              ${imgSrc ? `
-                <div class="thumb-wrap">
-                  <img
-                    src="${imgSrc}"
-                    class="thumb-img"
-                    data-img="${imgSrc}"
-                  >
-                </div>
-              ` : ``}
-              <div class="card-top">
-                <div>
-                  <p class="card-title">${escapeHtml(item.productName || "-")}</p>
-                  <div class="card-meta">바코드 ${escapeHtml(item.barcode || "-")}</div>
-                </div>
-                <span class="badge ${badgeClass}">${badgeText}</span>
+            ${imgSrc ? `
+              <div class="thumb-wrap">
+                <img
+                  src="${imgSrc}"
+                  class="thumb-img"
+                  data-img="${imgSrc}"
+                >
               </div>
+            ` : ``}
 
+            <div class="card-top">
+              <div>
+                <p class="card-title">${escapeHtml(item.productName || "-")}</p>
+                <div class="card-meta">바코드 ${escapeHtml(item.barcode || "-")}</div>
+              </div>
+              <span class="badge ${badgeClass}">${badgeText}</span>
             </div>
           `;
             
