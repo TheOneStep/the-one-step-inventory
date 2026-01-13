@@ -403,6 +403,10 @@ input[type="date"]::-webkit-datetime-edit-day-field {
   border:1px solid #ddd;
   background:#fff;
 }
+
+.thumb-wrap .badge{
+  margin-bottom:4px;
+}
 </style>
 </head>
 <body>
@@ -549,7 +553,6 @@ function render(data){
     };
     div.innerHTML = `
       <button class="btn-del">✕</button>
-      <span class="badge ${it.type}">${it.type==="purchase" ? "매입" : "납품"}</span>
 
       <div class="thumb-wrap">
         ${
@@ -559,6 +562,11 @@ function render(data){
         }
 
         <div style="flex:1;">
+          <!-- ✅ 여기! 배지 위치 -->
+          <span class="badge ${it.type}">
+            ${it.type==="purchase" ? "매입" : "납품"}
+          </span>
+
           ${
             it.type === "sale" && it.partner
               ? `<div class="meta"><strong>거래처: ${it.partner}</strong></div>`
