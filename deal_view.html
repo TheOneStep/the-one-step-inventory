@@ -21,6 +21,38 @@ h3{text-align:center;margin-bottom:12px}
 .box.sale {
   background: #fff0f0;
 }
+
+/* ✅ 상세 페이지 메인 이미지 */
+.img-card{
+  margin: 12px 0 14px;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;                 /* 이미지 꽉 채우기 */
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+/* ✅ 이미지 크게 */
+.img-card img{
+  width:100%;
+  height:280px;                    /* 🔥 핵심 */
+  max-height:320px;
+  object-fit:cover;
+  display:block;
+}
+
+.bc-chip{
+  margin: 2px 0 12px;
+}
+
+.bc-chip{
+  display:inline-block;
+  margin: -6px 0 12px;   /* 이미지랑 붙임 */
+  padding: 6px 12px;
+  font-size:12px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #ddd;
+}
 </style>
 </head>
 <body>
@@ -60,6 +92,12 @@ if (!key || !id) {
     if (key === "purchase_list") {
       box.innerHTML = `
         <h3>매입 상세</h3>
+
+        ${imageSrc ? `
+          <div class="img-card">
+            <img src="${imageSrc}" alt="상품 이미지">
+          </div>
+        ` : ""}
 
         <div class="row"><div class="label">상품명</div><div class="value">${item.name || ""}</div></div>
         <div class="row"><div class="label">바코드</div><div class="value">${item.barcode || ""}</div></div>
