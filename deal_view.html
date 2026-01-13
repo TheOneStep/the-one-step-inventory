@@ -208,19 +208,6 @@ function goEdit() {
 
 </script>
 <script>
-/* =========================
-   🖼 이미지 클릭 → 크게 보기 (상세 전용)
-========================= */
-document.addEventListener("click", (e) => {
-  const img = e.target.closest("img[data-img]");
-  if (!img) return;
-
-  const modal = document.getElementById("img-modal");
-  const view  = document.getElementById("img-modal-view");
-
-  view.src = img.dataset.img;
-  modal.style.display = "flex";
-});
 
 /* =========================
    ❌ 모달 클릭 → 닫기
