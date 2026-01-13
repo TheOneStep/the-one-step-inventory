@@ -380,6 +380,7 @@ imgInput.addEventListener("change", async () => {
   imgPreview.src = currentImageBase64;
   imgPreview.style.display = "block";
 });
+
 const imgBtn = document.getElementById("btn-image");
 const imgPreview = document.getElementById("image-preview");
 
@@ -606,6 +607,23 @@ const observer=new MutationObserver(()=>{
 observer.observe(barcodeSpan,{childList:true});
 
 btnAdd.addEventListener("click", () => {
+  // =====================================
+  // 🔑 바코드 기준 대표 이미지 저장 (핵심)
+  // =====================================
+  if (item.barcode && item.image) {
+    const map = JSON.parse(
+      localStorage.getItem("product_image_map") || "{}"
+    );
+
+    // 이미 있으면 덮어쓰지 않음 (원하면 덮어쓰기 가능)
+    if (!map[item.barcode]) {
+      map[item.barcode] = item.image;
+      localStorage.setItem(
+        "product_image_map",
+        JSON.stringify(map)
+      );
+    }
+  }
   const item = {
     // ✅ 수정 중이면 기존 tempId 유지, 아니면 신규 생성
     tempId: editingTempId || ("p_tmp_" + Date.now() + "_" + rand6()),
