@@ -115,6 +115,21 @@ h3 {
 <input id="barcode">
 </div>
 
+<!-- ✅ 상품 이미지 표시 영역 (수정용) -->
+<div class="field" id="image-box" style="display:none;">
+  <label>상품 이미지</label>
+  <img
+    id="image-preview"
+    style="
+      width:100%;
+      height:260px;
+      object-fit:cover;
+      border-radius:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,.08);
+    "
+  >
+</div>
+
 <div class="field">
 <label>상품명</label>
 <input id="name">
@@ -237,6 +252,23 @@ if(editMode && editId){
       memo:item.memo||""
     }];
     render();
+    // ============================
+    // ✅ 수정 화면: 상품 이미지 표시
+    // ============================
+    const imageMap = JSON.parse(
+      localStorage.getItem("product_image_map") || "{}"
+    );
+
+    const img =
+      item.image || imageMap[item.barcode] || null;
+
+    if (img) {
+      const imgBox = document.getElementById("image-box");
+      const imgEl  = document.getElementById("image-preview");
+
+      imgEl.src = img;
+      imgBox.style.display = "block";
+    }
   }
 }
 

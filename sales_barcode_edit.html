@@ -117,6 +117,21 @@ h3 {
 <input id="barcode">
 </div>
 
+<!-- ✅ 상품 이미지 표시 영역 (납품용) -->
+<div class="field" id="image-box" style="display:none;">
+  <label>상품 이미지</label>
+  <img
+    id="image-preview"
+    style="
+      width:100%;
+      height:260px;
+      object-fit:cover;
+      border-radius:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,.08);
+    "
+  >
+</div>
+
 <div class="field">
 <label>상품명</label>
 <input id="name">
@@ -258,6 +273,38 @@ if(editMode && editId){
       memo:item.memo||""
     }];
     render();
+    // ============================
+    // ✅ 납품 수정 화면: 상품 이미지 표시
+    // ============================
+
+    // 1) 대표 이미지 맵
+    const imageMap = JSON.parse(
+      localStorage.getItem("product_image_map") || "{}"
+    );
+
+    // 2) 매입 내역에서 이미지 찾기
+    function findPurchaseImage(barcode){
+      const purchases = JSON.parse(
+        localStorage.getItem("purchase_list") || "[]"
+      );
+      const found = purchases.find(p => p.barcode === barcode && p.image);
+      return found ? found.image : null;
+    }
+
+    // 3) 이미지 결정 (우선순위)
+    const img =
+      imageMap[item.barcode] ||
+      findPurchaseImage(item.barcode) ||
+      null;
+
+    // 4) 화면에 표시
+    if (img) {
+      const imgBox = document.getElementById("image-box");
+      const imgEl  = document.getElementById("image-preview");
+
+      imgEl.src = img;
+      imgBox.style.display = "block";
+    }
   }
 }
 
