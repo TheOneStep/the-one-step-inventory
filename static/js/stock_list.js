@@ -146,7 +146,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       card.innerHTML = `
         <div class="store-head" data-action="toggle">
-          <div class="store-name">🏬 ${storeName}</div>
+          <div class="store-name">
+          🏬 ${storeName}
+          <button
+            class="mini edit-store"
+            data-store="${escapeAttr(store.storeName)}"
+            style="margin-left:6px;"
+          >수정</button>
+        </div>
           <div class="store-right">
             <div>납품 총액 <span class="money">${delivery.toLocaleString()}원</span></div>
             <div>수금 금액 <span class="money green">${paid.toLocaleString()}원</span></div>
@@ -189,6 +196,43 @@ document.addEventListener("DOMContentLoaded", () => {
       listBox.appendChild(card);
     });
   }
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".edit-store");
+    if (!btn) return;
+
+    const oldStoreName = btn.dataset.store;
+    const newStoreName = prompt("거래처명을 수정하세요", oldStoreName);
+    if (!newStoreName) return;
+
+    const newPaid = prompt("수금 금액을 입력하세요 (숫자)", "");
+    if (newPaid === null) return;
+
+    const paidValue = Number(newPaid.replace(/,/g,"")) || 0;
+
+    // 🔥 sales_list 직접 수정
+    let changed = false;
+    sales.forEach(s => {
+      if ((s.partner || s.storeName || "") === oldStoreName) {
+        s.partner = newStoreName;   // 거래처명 변경
+        s.paid = paidValue;         // 수금 금액 변경
+        changed = true;
+      }
+    });
+
+    if (!changed) {
+      alert("수정할 데이터가 없습니다.");
+      return;
+    }
+
+    localStorage.setItem("sales_list", JSON.stringify(sales));
+
+    // 🔁 재계산 후 다시 렌더
+    storeData = buildStoreSummary(sales, avgCostMap);
+    renderStoreView();
+
+    alert("거래처 정보가 수정되었습니다.");
+  });
 
   function renderStoreRows(store) {
     const items = Object.values(store.items || {});
@@ -531,10 +575,12 @@ function buildStoreSummary(sales, avgCostMap) {
     stores[store].items[barcode].total += total;
     stores[store].items[barcode].paid += paid;
     if (memo) {
-      if (stores[store].items[barcode].memo) {
-        stores[store].items[barcode].memo += "\n" + memo;
-      } else {
-        stores[store].items[barcode].memo = memo;
+      const current = stores[store].items[barcode].memo;
+      const lines = current ? current.split("\n") : [];
+
+      if (!lines.includes(memo)) {
+        stores[store].items[barcode].memo =
+          current ? current + "\n" + memo : memo;
       }
     }
   });
