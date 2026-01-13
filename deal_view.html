@@ -74,6 +74,15 @@ if (!key || !id) {
 
   const list = JSON.parse(localStorage.getItem(key) || "[]");
   const item = list.find(i => i.id === id);
+  
+  // ✅ 상품 대표 이미지 맵
+  const productImageMap = JSON.parse(
+    localStorage.getItem("product_image_map") || "{}"
+  );
+
+  // ✅ 바코드 & 이미지 소스 결정
+  const barcode = item?.barcode || "";
+  const imageSrc = (barcode && productImageMap[barcode]) || item?.image || "";
 
   // ✅ 거래 타입에 따라 배경색 적용 (리스트와 동일)
   if (key === "purchase_list") {
