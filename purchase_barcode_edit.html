@@ -120,12 +120,14 @@ h3 {
   <label>상품 이미지</label>
   <img
     id="image-preview"
+    data-img=""
     style="
       width:100%;
       height:260px;
       object-fit:cover;
       border-radius:14px;
       box-shadow:0 4px 12px rgba(0,0,0,.08);
+      cursor:pointer;
     "
   >
 </div>
@@ -267,6 +269,7 @@ if(editMode && editId){
       const imgEl  = document.getElementById("image-preview");
 
       imgEl.src = img;
+      imgEl.dataset.img = img;   // ✅ 이 줄 추가
       imgBox.style.display = "block";
     }
   }
@@ -327,6 +330,46 @@ if (isIOS) {
   };
   document.body.appendChild(script);
 }
+</script>
+
+<!-- 🖼 이미지 크게 보기 모달 -->
+<div id="img-modal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:9999;
+  justify-content:center;
+  align-items:center;
+">
+  <img id="img-modal-view" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:12px;
+    background:#fff;
+  ">
+</div>
+<script>
+/* =========================
+   🖼 이미지 클릭 → 크게 보기 (매입 수정)
+========================= */
+document.addEventListener("click", (e) => {
+  const img = e.target.closest("img[data-img]");
+  if (!img) return;
+
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+
+  view.src = img.dataset.img;
+  modal.style.display = "flex";
+});
+
+/* =========================
+   ❌ 모달 클릭 → 닫기
+========================= */
+document.getElementById("img-modal").addEventListener("click", () => {
+  document.getElementById("img-modal").style.display = "none";
+});
 </script>
 </body>
 </html>

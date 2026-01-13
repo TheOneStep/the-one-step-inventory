@@ -104,7 +104,12 @@ if (!key || !id) {
 
         ${imageSrc ? `
           <div class="img-card">
-            <img src="${imageSrc}" alt="상품 이미지">
+            <img
+              src="${imageSrc}"
+              data-img="${imageSrc}"
+              alt="상품 이미지"
+              style="cursor:pointer;"
+            >
           </div>
         ` : ""}
 
@@ -135,7 +140,12 @@ if (!key || !id) {
 
         ${imageSrc ? `
           <div class="img-card">
-            <img src="${imageSrc}" alt="상품 이미지">
+            <img
+              src="${imageSrc}"
+              data-img="${imageSrc}"
+              alt="상품 이미지"
+              style="cursor:pointer;"
+            >
           </div>
         ` : ""}
 
@@ -173,8 +183,68 @@ function goEdit() {
     location.href =
       "sales_barcode_edit.html?mode=edit&id=" + id;
   }
-}
-</script>
+  /* =========================
+    🖼 이미지 클릭 → 크게 보기 (상세 전용)
+  ========================= */
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest("img[data-img]");
+    if (!img) return;
 
+    const modal = document.getElementById("img-modal");
+    const view  = document.getElementById("img-modal-view");
+
+    view.src = img.dataset.img;
+    modal.style.display = "flex";
+  });
+
+  /* =========================
+    ❌ 모달 클릭 → 닫기
+  ========================= */
+  document.getElementById("img-modal").addEventListener("click", () => {
+    document.getElementById("img-modal").style.display = "none";
+  });
+  
+}
+
+</script>
+<script>
+/* =========================
+   🖼 이미지 클릭 → 크게 보기 (상세 전용)
+========================= */
+document.addEventListener("click", (e) => {
+  const img = e.target.closest("img[data-img]");
+  if (!img) return;
+
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+
+  view.src = img.dataset.img;
+  modal.style.display = "flex";
+});
+
+/* =========================
+   ❌ 모달 클릭 → 닫기
+========================= */
+document.getElementById("img-modal").addEventListener("click", () => {
+  document.getElementById("img-modal").style.display = "none";
+});
+</script>
+<!-- 🖼 이미지 크게 보기 모달 -->
+<div id="img-modal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:9999;
+  justify-content:center;
+  align-items:center;
+">
+  <img id="img-modal-view" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:12px;
+    background:#fff;
+  ">
+</div>
 </body>
 </html>
