@@ -387,6 +387,22 @@ input[type="date"]::-webkit-datetime-edit-day-field {
   font-weight:600;
   cursor:pointer;
 }
+/* 🖼 리스트 썸네일 */
+.thumb-wrap{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.thumb-img{
+  width:56px;
+  height:56px;
+  border-radius:10px;
+  object-fit:cover;
+  flex-shrink:0;
+  border:1px solid #ddd;
+  background:#fff;
+}
 </style>
 </head>
 <body>
@@ -488,6 +504,7 @@ let purchases = JSON.parse(localStorage.getItem("purchase_list")||"[]")
     qty:n(i.qty),
     total:n(i.price)*n(i.qty),
     memo: i.memo || "",   // ✅ 추가
+    image: i.image || null,   // ✅ 추가
     createdAt: i.createdAt   // ✅ 핵심
   }));
 
@@ -504,6 +521,7 @@ let sales = JSON.parse(localStorage.getItem("sales_list")||"[]")
     qty:n(i.qty),
     total: n(i.price) * n(i.qty),   // ✅ 납품 총액 추가
     memo: i.memo || "",
+    image: i.image || null,   // ✅ 추가
     createdAt: i.createdAt
   }));
 
@@ -532,21 +550,33 @@ function render(data){
     div.innerHTML = `
       <button class="btn-del">✕</button>
       <span class="badge ${it.type}">${it.type==="purchase" ? "매입" : "납품"}</span>
-      ${
-        it.type === "sale" && it.partner
-          ? `<div class="meta"><strong>거래처: ${it.partner}</strong></div>`
-          : ""
-      }
-      <div class="title">${it.name}</div>
-      <div class="barcode">바코드 ${it.barcode}</div>
-      <div class="meta">${it.date}</div>
-      <div class="meta">가격 ${fmt(it.price)} · 수량 ${fmt(it.qty)}</div>
 
-      <div class="amount">
-        ${it.type === "purchase" ? "매입 총액" : "납품 총액"} ${fmt(it.total)} 원
+      <div class="thumb-wrap">
+        ${
+          it.image
+            ? `<img src="${it.image}" class="thumb-img">`
+            : ``
+        }
+
+        <div style="flex:1;">
+          ${
+            it.type === "sale" && it.partner
+              ? `<div class="meta"><strong>거래처: ${it.partner}</strong></div>`
+              : ""
+          }
+
+          <div class="title">${it.name}</div>
+          <div class="barcode">바코드 ${it.barcode}</div>
+          <div class="meta">${it.date}</div>
+          <div class="meta">가격 ${fmt(it.price)} · 수량 ${fmt(it.qty)}</div>
+
+          <div class="amount">
+            ${it.type === "purchase" ? "매입 총액" : "납품 총액"} ${fmt(it.total)} 원
+          </div>
+
+          ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}
+        </div>
       </div>
-
-      ${it.memo ? `<div class="meta">메모: ${it.memo}</div>` : ""}
     `;
 
     div.querySelector(".btn-del").onclick = ()=>{
