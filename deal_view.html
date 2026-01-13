@@ -106,9 +106,9 @@ if (!key || !id) {
           <div class="img-card">
             <img
               src="${imageSrc}"
-              data-img="${imageSrc}"
               alt="상품 이미지"
               style="cursor:pointer;"
+              onclick="openImage('${imageSrc}')"
             >
           </div>
         ` : ""}
@@ -142,9 +142,9 @@ if (!key || !id) {
           <div class="img-card">
             <img
               src="${imageSrc}"
-              data-img="${imageSrc}"
               alt="상품 이미지"
               style="cursor:pointer;"
+              onclick="openImage('${imageSrc}')"
             >
           </div>
         ` : ""}
@@ -178,7 +178,14 @@ function goEdit() {
     location.href = "sales_barcode_edit.html?mode=edit&id=" + id;
   }
 }
+function openImage(src) {
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+  if (!modal || !view) return;
 
+  view.src = src;
+  modal.style.display = "flex";
+}
 </script>
 
 <!-- 🖼 이미지 크게 보기 모달 -->
@@ -199,20 +206,6 @@ function goEdit() {
   ">
 </div>
 <script>
-/* =========================
-   🖼 이미지 클릭 → 크게 보기 (상세 공통)
-========================= */
-document.addEventListener("click", (e) => {
-  const img = e.target.closest("img[data-img]");
-  if (!img) return;
-
-  const modal = document.getElementById("img-modal");
-  const view  = document.getElementById("img-modal-view");
-  if (!modal || !view) return;
-
-  view.src = img.dataset.img;
-  modal.style.display = "flex";
-});
 
 /* ❌ 모달 클릭 → 닫기 */
 document.getElementById("img-modal").addEventListener("click", () => {
