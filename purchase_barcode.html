@@ -79,7 +79,7 @@ textarea { resize:vertical; min-height:60px; }
 }
 
 #product-form {
-  display:none;
+  display:block;
   margin-top:16px;
   padding-top:12px;
   border-top:1px solid #eee;
@@ -195,7 +195,20 @@ textarea { resize:vertical; min-height:60px; }
 
     <div class="field">
       <label>상품명</label>
-      <input id="input-name">
+      <input id="input-name" autocomplete="off">
+      <div id="name-suggest"
+        style="
+          display:none;
+          background:#fff;
+          border:1px solid #ddd;
+          border-radius:8px;
+          margin-top:4px;
+          max-height:160px;
+          overflow-y:auto;
+          text-align:left;
+          font-size:14px;
+        ">
+      </div>
     </div>
 
     <div class="field">
@@ -229,6 +242,38 @@ textarea { resize:vertical; min-height:60px; }
 <script src="static/js/product_master.js"></script>
 
 <script>
+function getAllProducts() {
+  const map = new Map();
+
+  // 상품 마스터
+  if (window.ProductMaster?.getAll) {
+    const all = ProductMaster.getAll();
+    for (const bc in all) {
+      if (all[bc]?.name) {
+        map.set(all[bc].name, bc);
+      }
+    }
+  }
+
+  // 기존 매입
+  const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+  purchases.forEach(p => {
+    if (p.name && p.barcode) map.set(p.name, p.barcode);
+  });
+
+  // 기존 납품
+  const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
+  sales.forEach(s => {
+    if (s.productName && s.barcode) {
+      map.set(s.productName, s.barcode);
+    }
+  });
+
+  return Array.from(map.entries()); // [ [name, barcode] ]
+}
+</script>
+
+<script>
 // ✅ 수정모드 상태
 let editingTempId = null;
 
@@ -249,9 +294,54 @@ const formEl = document.getElementById("product-form");
 
 const barcodeEl = document.getElementById("input-barcode");
 const nameEl = document.getElementById("input-name");
+const suggestBox = document.getElementById("name-suggest");
+
 const priceEl = document.getElementById("price");
 const qtyEl = document.getElementById("qty");
 const memoEl = document.getElementById("memo");
+
+nameEl.addEventListener("input", () => {
+  const keyword = nameEl.value.trim();
+  if (keyword.length < 2) {
+    suggestBox.style.display = "none";
+    return;
+  }
+
+  const list = getAllProducts();
+  const matches = list.filter(([name]) => name.includes(keyword));
+
+  if (!matches.length) {
+    suggestBox.style.display = "none";
+    return;
+  }
+
+  suggestBox.innerHTML = matches.map(([name, bc]) => `
+    <div style="padding:8px 10px; cursor:pointer;"
+         data-name="${name}"
+         data-barcode="${bc}">
+      ${name}
+    </div>
+  `).join("");
+
+  suggestBox.style.display = "block";
+});
+
+suggestBox.addEventListener("click", (e) => {
+  const item = e.target.closest("[data-barcode]");
+  if (!item) return;
+
+  nameEl.value = item.dataset.name;
+  barcodeEl.value = item.dataset.barcode;
+
+  suggestBox.style.display = "none";
+
+  if (window.ProductMaster) {
+    const m = ProductMaster.get(barcodeEl.value);
+    if (m?.price) {
+      priceEl.value = formatNumber(m.price);
+    }
+  }
+});
 
 const cartBox = document.getElementById("cart-list");
 const totalEl = document.getElementById("total-amount");
@@ -313,7 +403,7 @@ const purchaseCart={
   render(){
   if(!this.items.length){
     cartBox.innerHTML="<div class='meta'>아직 추가된 항목이 없습니다.</div>";
-    totalEl.value = formatNumber(total);
+    totalEl.value = "0";
     return;
   }
 
@@ -351,7 +441,7 @@ const purchaseCart={
   });
 
   cartBox.innerHTML=html;
-  totalEl.textContent=formatNumber(total);
+  totalEl.value = formatNumber(total);
 }
 };
 purchaseCart.load();
