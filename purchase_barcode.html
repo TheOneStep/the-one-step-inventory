@@ -360,6 +360,21 @@ const btnSaveAll = document.getElementById("btnSaveAll");
   });
 });
 
+function updateTempTotal() {
+  // 장바구니에 항목이 있으면 기존 총액 유지
+  if (purchaseCart.items.length > 0) return;
+
+  const price = parseNumber(priceEl.value);
+  const qty   = parseNumber(qtyEl.value);
+
+  const total = price * qty;
+  totalEl.value = total ? formatNumber(total) : "0";
+}
+
+// 입력 중 실시간 계산
+priceEl.addEventListener("input", updateTempTotal);
+qtyEl.addEventListener("input", updateTempTotal);
+
 const CART_KEY="purchase_cart_tmp";
 const purchaseCart={
   items:[],
