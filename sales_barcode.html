@@ -103,12 +103,22 @@
     }
 
     /* 🔒 스캔 전에는 상품 입력 폼 숨김 */
-    #product-form {
+    /* #product-form {
       display: none;
       margin-top: 16px;
       padding-top: 12px;
       border-top: 1px solid #eee;
+    } */
+    
+    /* 📦 상품 입력 폼 (항상 표시) */
+    #product-form {
+      display: block;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
     }
+
+    
 
     /* 📦 카트 표시 영역 (매입과 유사) */
     #cart-list {
@@ -231,8 +241,9 @@
     </div>
     
     <!-- 5) 인식 결과 -->
-    <div id="result-box" style="margin-top:12px; font-size:15px; text-align:center;">
-      인식 결과: <span id="barcode-value">없음</span>
+    <div id="result-box" style="margin-top:12px; font-size:14px; text-align:center; color:#666;">
+      바코드 스캔 또는 상품명 / 바코드를 직접 입력하세요<br>
+      <span id="barcode-value" style="display:none;">없음</span>
     </div>
 
     <!-- 6) 스캔 후 열리는 입력 영역 -->
@@ -714,7 +725,7 @@
       if (!code || code === "없음") return;
 
       barcodeEl.value = code;
-      formEl.style.display = "block";
+      // formEl.style.display = "block";
 
       autoFillByBarcode({
         barcode: code,
