@@ -194,6 +194,33 @@ textarea { resize:vertical; min-height:60px; }
     </div>
 
     <div class="field">
+      <label>상품 이미지</label>
+
+      <input
+        type="file"
+        id="input-image"
+        accept="image/*"
+        capture="environment"
+        style="display:none;"
+      >
+
+      <button
+        type="button"
+        class="btn btn-gray"
+        id="btn-image"
+      >
+        📷 상품 사진 찍기
+      </button>
+
+      <div style="margin-top:8px;">
+        <img
+          id="image-preview"
+          style="max-width:100%; border-radius:10px; display:none;"
+        >
+      </div>
+    </div>
+
+    <div class="field">
       <label>상품명</label>
       <input id="input-name" autocomplete="off">
       <div id="name-suggest"
@@ -299,6 +326,32 @@ const suggestBox = document.getElementById("name-suggest");
 const priceEl = document.getElementById("price");
 const qtyEl = document.getElementById("qty");
 const memoEl = document.getElementById("memo");
+
+// =======================
+// 📷 상품 이미지 처리
+// =======================
+let currentImageBase64 = null;
+
+const imgInput = document.getElementById("input-image");
+const imgBtn = document.getElementById("btn-image");
+const imgPreview = document.getElementById("image-preview");
+
+imgBtn.addEventListener("click", () => {
+  imgInput.click();
+});
+
+imgInput.addEventListener("change", () => {
+  const file = imgInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    currentImageBase64 = reader.result;
+    imgPreview.src = currentImageBase64;
+    imgPreview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
 
 nameEl.addEventListener("input", () => {
   const keyword = nameEl.value.trim();
@@ -526,7 +579,8 @@ btnAdd.addEventListener("click", () => {
     name: nameEl.value.trim(),
     price: parseNumber(priceEl.value),
     qty: parseNumber(qtyEl.value),
-    memo: memoEl.value.trim()
+    memo: memoEl.value.trim(),
+    image: currentImageBase64   // ✅ 추가
   };
 
   if (!item.barcode || !item.name) { alert("바코드와 상품명은 필수입니다."); return; }
@@ -560,6 +614,11 @@ btnAdd.addEventListener("click", () => {
   qtyEl.value = "";
   memoEl.value = "";
   barcodeSpan.textContent = "없음";
+
+  /* ⬇⬇⬇ 여기 바로 추가 ⬇⬇⬇ */
+  currentImageBase64 = null;
+  imgPreview.style.display = "none";
+  imgInput.value = "";
 });
 
 btnSaveAll.addEventListener("click",()=>{
@@ -577,6 +636,7 @@ btnSaveAll.addEventListener("click",()=>{
       price:it.price,
       qty:it.qty,
       memo:it.memo,
+      image: it.image || null,   // ✅ 추가
       createdAt:new Date().toISOString()
     });
   });
