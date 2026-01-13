@@ -172,17 +172,12 @@ if (!key || !id) {
 }   // ← key/id else 닫힘
 
 function goEdit() {
-  // 🟦 매입
   if (key === "purchase_list") {
-    location.href =
-      "purchase_barcode_edit.html?mode=edit&id=" + id;
+    location.href = "purchase_barcode_edit.html?mode=edit&id=" + id;
+  } else if (key === "sales_list") {
+    location.href = "sales_barcode_edit.html?mode=edit&id=" + id;
   }
-
-  // 🟥 납품(매출)
-  else if (key === "sales_list") {
-    location.href =
-      "sales_barcode_edit.html?mode=edit&id=" + id;
-  }
+}
   /* =========================
     🖼 이미지 클릭 → 크게 보기 (상세 전용)
   ========================= */
