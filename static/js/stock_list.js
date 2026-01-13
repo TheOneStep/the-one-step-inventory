@@ -106,15 +106,29 @@ document.addEventListener("DOMContentLoaded", () => {
         : "";
 
       card.innerHTML = `
-        <div class="card-top">
-          <div>
-            <div class="card-title">${title}</div>
-            <div class="card-meta">바코드: ${bc}</div>
+        <div class="card">
+
+          ${item.image ? `
+            <div class="thumb-wrap">
+              <img
+                src="${item.image}"
+                class="thumb-img"
+                data-img="${item.image}"
+              >
+            </div>
+          ` : ``}
+
+          <div class="card-top">
+            <div>
+              <p class="card-title">${escapeHtml(item.productName || "-")}</p>
+              <div class="card-meta">바코드 ${escapeHtml(item.barcode || "-")}</div>
+            </div>
+            <span class="badge ${badgeClass}">${badgeText}</span>
           </div>
-          <div class="badge ${badgeClass}">${badgeText}</div>
+
         </div>
-        ${qty === 0 ? `<div class="row-actions">${hideBtn}</div>` : ""}
       `;
+        
 
       listBox.appendChild(card);
     });
@@ -548,6 +562,25 @@ function buildStoreSummary(sales, avgCostMap) {
           ? s.receivedAmount
           : 0
     );
+
+    // 🔍 썸네일 클릭 → 크게 보기
+    document.addEventListener("click", (e) => {
+      const img = e.target.closest(".thumb-img");
+      if (!img) return;
+
+      const modal = document.getElementById("img-modal");
+      const view  = document.getElementById("img-modal-view");
+
+      if (!modal || !view) return;
+
+      view.src = img.dataset.img;
+      modal.style.display = "flex";
+    });
+
+    // 팝업 닫기
+    document.getElementById("img-modal")?.addEventListener("click", () => {
+      document.getElementById("img-modal").style.display = "none";
+    });
 
     if (!stores[store]) {
       stores[store] = {
