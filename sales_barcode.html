@@ -587,6 +587,7 @@ btnAdd.addEventListener("click", () => {
     }
   } else {
     saleCart.add(item);
+    updateStockAmountFromCart(); // ✅ 누적 재고금액 계산
   }
 
   if (window.ProductMaster) {
@@ -600,7 +601,7 @@ btnAdd.addEventListener("click", () => {
   priceEl.value = "";
   qtyEl.value = "";
   paidEl.value = "";
-  stockEl.value = "";
+  // stockEl.value = "";
   memoEl.value = "";
   barcodeSpan.textContent = "없음";
 });
