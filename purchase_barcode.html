@@ -590,20 +590,41 @@ cartBox.addEventListener("click", (e) => {
 });
 
 const observer=new MutationObserver(()=>{
-  const code=barcodeSpan.textContent.trim();
-  if(!code||code==="없음") return;
-  barcodeEl.value=code;
-  formEl.style.display="block";
+  const code = barcodeSpan.textContent.trim();
+  if(!code || code === "없음") return;
 
-  if(window.ProductMaster){
-    const m=ProductMaster.get(code);
-    if(m){
-      if(!nameEl.value) nameEl.value=m.name||"";
-      if(!priceEl.value && m.price) priceEl.value=formatNumber(m.price);
+  // 1️⃣ 바코드 입력
+  barcodeEl.value = code;
+  formEl.style.display = "block";
+
+  // 2️⃣ 상품 마스터 정보 자동 입력
+  if (window.ProductMaster) {
+    const m = ProductMaster.get(code);
+    if (m) {
+      if (!nameEl.value) nameEl.value = m.name || "";
+      if (!priceEl.value && m.price) {
+        priceEl.value = formatNumber(m.price);
+      }
     }
   }
+
+  // 3️⃣ ⭐⭐⭐ 바코드 기준 상품 이미지 자동 표시 (핵심)
+  const imageMap = JSON.parse(
+    localStorage.getItem("product_image_map") || "{}"
+  );
+
+  if (imageMap[code]) {
+    imgPreview.src = imageMap[code];
+    imgPreview.style.display = "block";
+
+    // 중요: 기존 이미지도 현재 이미지로 세팅
+    currentImageBase64 = imageMap[code];
+  } else {
+    imgPreview.style.display = "none";
+    currentImageBase64 = null;
+  }
 });
-observer.observe(barcodeSpan,{childList:true});
+observer.observe(barcodeSpan, { childList:true });
 
 btnAdd.addEventListener("click", () => {
   const item = {
