@@ -369,6 +369,24 @@ input[type="date"]::-webkit-datetime-edit-day-field {
 .card.sale .meta strong{
   color:#d93b3b;
 }
+
+/* 백업 버튼 */
+.backup-row{
+  display:flex;
+  gap:10px;
+  margin:10px 0 14px;
+}
+
+.backup-btn{
+  flex:1;
+  min-height:44px;
+  border-radius:12px;
+  border:1px solid #999;
+  background:#fff;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -430,6 +448,12 @@ input[type="date"]::-webkit-datetime-edit-day-field {
   <!-- 엑셀 버튼 -->
   <button id="btn-excel" class="excel-btn">⬇엑셀 다운로드</button>
   <!-- <button class="text-btn" id="btn-stock">재고 관리</button> -->
+</div>
+<!-- 백업 (JSON) -->
+<div class="backup-row">
+  <button id="btn-backup-export" class="backup-btn">⬇ 백업 내보내기</button>
+  <button id="btn-backup-import" class="backup-btn">⬆ 백업 불러오기</button>
+  <input type="file" id="backup-file" accept="application/json" hidden>
 </div>
 
 <div id="list"></div>
@@ -643,6 +667,105 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.classList.add("active");
     }
   });
+
+  // =========================
+  // 📦 JSON 백업 내보내기
+  // =========================
+  document.getElementById("btn-backup-export").addEventListener("click", () => {
+    const backup = {
+      purchase_list: JSON.parse(localStorage.getItem("purchase_list") || "[]"),
+      sales_list: JSON.parse(localStorage.getItem("sales_list") || "[]"),
+      product_hidden_list: JSON.parse(localStorage.getItem("product_hidden_list") || "[]"),
+      createdAt: new Date().toISOString()
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(backup, null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // =========================
+  // 📥 JSON 백업 불러오기
+  // =========================
+  document.getElementById("btn-backup-import").addEventListener("click", () => {
+    document.getElementById("backup-file").click();
+  });
+
+  document.getElementById("backup-file").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+
+      if (!data.purchase_list || !data.sales_list) {
+        alert("올바른 백업 파일이 아닙니다.");
+        return;
+      }
+
+      const mode = confirm(
+        "백업 데이터를 어떻게 처리할까요?\n\n" +
+        "확인: 기존 데이터와 합치기\n" +
+        "취소: 기존 데이터 덮어쓰기"
+      );
+
+      // 🔹 현재 데이터
+      const curPurchase = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+      const curSales = JSON.parse(localStorage.getItem("sales_list") || "[]");
+      const curHidden = JSON.parse(localStorage.getItem("product_hidden_list") || "[]");
+
+      let nextPurchase, nextSales, nextHidden;
+
+      if (mode) {
+        // =====================
+        // ✅ 합치기 (ID 기준)
+        // =====================
+        const mergeById = (a, b) => {
+          const map = new Map();
+          a.forEach(i => i.id && map.set(i.id, i));
+          b.forEach(i => i.id && !map.has(i.id) && map.set(i.id, i));
+          return Array.from(map.values());
+        };
+
+        nextPurchase = mergeById(curPurchase, data.purchase_list);
+        nextSales = mergeById(curSales, data.sales_list);
+        nextHidden = Array.from(new Set([...curHidden, ...(data.product_hidden_list || [])]));
+
+      } else {
+        // =====================
+        // ❌ 덮어쓰기
+        // =====================
+        if (!confirm("기존 데이터가 모두 삭제됩니다.\n정말 덮어쓸까요?")) return;
+
+        nextPurchase = data.purchase_list;
+        nextSales = data.sales_list;
+        nextHidden = data.product_hidden_list || [];
+      }
+
+      localStorage.setItem("purchase_list", JSON.stringify(nextPurchase));
+      localStorage.setItem("sales_list", JSON.stringify(nextSales));
+      localStorage.setItem("product_hidden_list", JSON.stringify(nextHidden));
+
+      alert("백업 불러오기가 완료되었습니다.");
+      location.reload();
+
+    } catch (err) {
+      alert("백업 파일을 불러오는 중 오류가 발생했습니다.");
+    }
+  };
+
+  reader.readAsText(file);
+});
 </script>
 
 </body>
