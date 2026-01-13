@@ -403,13 +403,19 @@
       background:#fafafa;
     }
     /* ❌ 상품 카드 안쪽 작은 테두리 제거 */
-    .card > div {
+    /* Remove any default border, background or shadow from direct children of a product card */
+    .card > div,
+    .card > * {
       border: none !important;
       box-shadow: none !important;
       background: transparent !important;
     }
-    .card > * {
+    /* Also remove border/background on nested card containers like thumb-wrap and card-top */
+    .card .thumb-wrap,
+    .card .card-top {
       border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
     }
   </style>
 </head>
