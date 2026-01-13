@@ -757,6 +757,7 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
       purchase_list: JSON.parse(localStorage.getItem("purchase_list") || "[]"),
       sales_list: JSON.parse(localStorage.getItem("sales_list") || "[]"),
       product_hidden_list: JSON.parse(localStorage.getItem("product_hidden_list") || "[]"),
+      product_image_map: JSON.parse(localStorage.getItem("product_image_map") || "{}"),
       createdAt: new Date().toISOString()
     };
 
@@ -836,6 +837,13 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
       localStorage.setItem("purchase_list", JSON.stringify(nextPurchase));
       localStorage.setItem("sales_list", JSON.stringify(nextSales));
       localStorage.setItem("product_hidden_list", JSON.stringify(nextHidden));
+
+      if (data.product_image_map) {
+        localStorage.setItem(
+          "product_image_map",
+          JSON.stringify(data.product_image_map)
+        );
+      }
 
       alert("백업 불러오기가 완료되었습니다.");
       location.reload();
