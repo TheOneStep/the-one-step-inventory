@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <div class="store-head" data-action="toggle">
           <div class="store-left">
-            <span class="store-name">🏬 ${storeName}</span>
+            <div class="store-name">🏬 ${storeName}</div>
             <button
               class="btn-edit"
               data-store="${escapeAttr(store.storeName)}"
@@ -194,8 +194,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /* 🔽 여기 바로 추가 */
+  const editBtn = card.querySelector(".btn-edit");
+  if (editBtn) {
+    editBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  }
+
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".edit-store");
+    const btn = e.target.closest(".btn-edit");
     if (!btn) return;
 
     const oldStoreName = btn.dataset.store;
