@@ -175,6 +175,41 @@ function goEdit() {
   }
 }
 </script>
+<!-- 🖼 이미지 확대 모달 (상세 페이지용) -->
+<div id="img-modal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+">
+  <img id="img-modal-view" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:12px;
+    background:#fff;
+  ">
+</div>
+<script>
+// =========================
+// 🖼 상세 페이지 이미지 클릭 → 크게 보기
+// 거래 상세 페이지의 대표 이미지를 크게 표시하고, 배경을 클릭하면 닫습니다.
+document.addEventListener("click", (e) => {
+  const img = e.target.closest(".img-card img");
+  if (!img) return;
+  const src = img.dataset.img || img.src;
+  if (!src) return;
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+  view.src = src;
+  modal.style.display = "flex";
+});
+document.getElementById("img-modal").addEventListener("click", () => {
+  document.getElementById("img-modal").style.display = "none";
+});
+</script>
 
 </body>
 </html>

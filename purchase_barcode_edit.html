@@ -328,5 +328,43 @@ if (isIOS) {
   document.body.appendChild(script);
 }
 </script>
+<!-- scanning script ends -->
+<!-- 🖼 이미지 확대 모달 -->
+<div id="img-modal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+">
+  <img id="img-modal-view" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:12px;
+    background:#fff;
+  ">
+</div>
+<script>
+// =========================
+// 🖼 이미지 클릭 → 크게 보기
+// 이미지 박스의 사진을 클릭하면 크게 보여주고, 배경을 클릭하면 닫습니다.
+document.addEventListener("click", (e) => {
+  // 수정 화면에서는 image-box 내부 이미지 요소만 타겟팅
+  const img = e.target.closest("#image-box img");
+  if (!img) return;
+  const src = img.dataset.img || img.src;
+  if (!src) return;
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+  view.src = src;
+  modal.style.display = "flex";
+});
+// ❌ 모달 클릭 → 닫기
+document.getElementById("img-modal").addEventListener("click", () => {
+  document.getElementById("img-modal").style.display = "none";
+});
+</script>
 </body>
 </html>

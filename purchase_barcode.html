@@ -843,5 +843,42 @@ if (isIOS) {
   document.body.appendChild(s);
 }
 </script>
+<!-- 🖼 이미지 확대 모달 -->
+<div id="img-modal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+">
+  <img id="img-modal-view" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:12px;
+    background:#fff;
+  ">
+</div>
+<script>
+// =========================
+// 🖼 이미지 클릭 → 크게 보기
+// 판매 페이지와 동일한 방식으로 사진을 크게 보여주고, 다른 영역을 누르면 닫습니다.
+document.addEventListener("click", (e) => {
+  // 상품 이미지 미리보기 영역에서만 동작하도록 지정
+  const img = e.target.closest(".product-image-box img, #image-box img");
+  if (!img) return;
+  const src = img.dataset.img || img.src;
+  if (!src) return;
+  const modal = document.getElementById("img-modal");
+  const view  = document.getElementById("img-modal-view");
+  view.src = src;
+  modal.style.display = "flex";
+});
+// ❌ 모달 클릭 → 닫기
+document.getElementById("img-modal").addEventListener("click", () => {
+  document.getElementById("img-modal").style.display = "none";
+});
+</script>
 </body>
 </html>
