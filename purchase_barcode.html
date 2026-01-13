@@ -217,6 +217,11 @@ textarea { resize:vertical; min-height:60px; }
     <div class="field">
       <label>상품 이미지</label>
 
+      <!-- 🔥 이미지 미리보기 먼저 -->
+      <div class="product-image-box" id="image-box">
+        <img id="image-preview">
+      </div>
+
       <input
         type="file"
         id="input-image"
@@ -242,6 +247,7 @@ textarea { resize:vertical; min-height:60px; }
       >
         📷 사진 찍기
       </button>
+    </div>
 
       <div class="product-image-box" id="image-box">
         <img id="image-preview">
