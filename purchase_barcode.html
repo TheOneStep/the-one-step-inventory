@@ -616,6 +616,12 @@ btnAdd.addEventListener("click", () => {
     memo: memoEl.value.trim(),
     image: currentImageBase64   // ✅ 추가
   };
+  // ✅ 바코드 기준 상품 이미지 저장소에 저장
+  if (item.barcode && item.image) {
+    const map = JSON.parse(localStorage.getItem("product_image_map") || "{}");
+    map[item.barcode] = item.image;
+    localStorage.setItem("product_image_map", JSON.stringify(map));
+  }
 
   if (!item.barcode || !item.name) { alert("바코드와 상품명은 필수입니다."); return; }
   if (item.qty <= 0) { alert("수량은 1 이상이어야 합니다."); return; }
