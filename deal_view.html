@@ -104,12 +104,7 @@ if (!key || !id) {
 
         ${imageSrc ? `
           <div class="img-card">
-            <img
-              src="${imageSrc}"
-              alt="상품 이미지"
-              style="cursor:pointer;"
-              onclick="openImage('${imageSrc}')"
-            >
+            <img src="${imageSrc}" alt="상품 이미지">
           </div>
         ` : ""}
 
@@ -140,12 +135,7 @@ if (!key || !id) {
 
         ${imageSrc ? `
           <div class="img-card">
-            <img
-              src="${imageSrc}"
-              alt="상품 이미지"
-              style="cursor:pointer;"
-              onclick="openImage('${imageSrc}')"
-            >
+            <img src="${imageSrc}" alt="상품 이미지">
           </div>
         ` : ""}
 
@@ -172,49 +162,19 @@ if (!key || !id) {
 }   // ← key/id else 닫힘
 
 function goEdit() {
+  // 🟦 매입
   if (key === "purchase_list") {
-    location.href = "purchase_barcode_edit.html?mode=edit&id=" + id;
-  } else if (key === "sales_list") {
-    location.href = "sales_barcode_edit.html?mode=edit&id=" + id;
+    location.href =
+      "purchase_barcode_edit.html?mode=edit&id=" + id;
   }
-}
-function openImage(e, src) {
-  e.stopPropagation(); // 🔥 이 한 줄이 핵심
 
-  const modal = document.getElementById("img-modal");
-  const view  = document.getElementById("img-modal-view");
-  if (!modal || !view) return;
-
-  view.src = src;
-  modal.style.display = "flex";
+  // 🟥 납품(매출)
+  else if (key === "sales_list") {
+    location.href =
+      "sales_barcode_edit.html?mode=edit&id=" + id;
+  }
 }
 </script>
 
-<!-- 🖼 이미지 크게 보기 모달 -->
-<div id="img-modal" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  z-index:9999;
-  justify-content:center;
-  align-items:center;
-">
-  <img id="img-modal-view" style="
-    max-width:90%;
-    max-height:90%;
-    border-radius:12px;
-    background:#fff;
-  ">
-</div>
-<script>
-
-/* ❌ 모달 클릭 → 닫기 */
-document.getElementById("img-modal").addEventListener("click", (e) => {
-  if (e.target.id === "img-modal") {
-    e.currentTarget.style.display = "none";
-  }
-});
-</script>
 </body>
 </html>

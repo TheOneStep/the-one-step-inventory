@@ -219,11 +219,7 @@ textarea { resize:vertical; min-height:60px; }
 
       <!-- 🔥 이미지 미리보기 먼저 -->
       <div class="product-image-box" id="image-box">
-        <img
-          id="image-preview"
-          class="product-thumb"
-          data-img=""
-        >
+        <img id="image-preview">
       </div>
 
       <input
@@ -252,6 +248,10 @@ textarea { resize:vertical; min-height:60px; }
         📷 사진 찍기
       </button>
     </div>
+
+      <div class="product-image-box" id="image-box">
+        <img id="image-preview">
+      </div>
     </div>
 
     <div class="field">
@@ -424,7 +424,6 @@ function loadImageByBarcode(barcode) {
 
   if (map[barcode]) {
     imgPreview.src = map[barcode];
-    imgPreview.dataset.img = map[barcode]; // ✅ 추가
     imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = map[barcode];
     return;
@@ -438,7 +437,6 @@ function loadImageByBarcode(barcode) {
   const foundPurchase = purchases.find(p => p.barcode === barcode && p.image);
   if (foundPurchase) {
     imgPreview.src = foundPurchase.image;
-    imgPreview.dataset.img = foundPurchase.image; // ✅ 추가
     imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = foundPurchase.image;
 
@@ -456,7 +454,6 @@ function loadImageByBarcode(barcode) {
   const foundSale = sales.find(s => s.barcode === barcode && s.image);
   if (foundSale) {
     imgPreview.src = foundSale.image;
-    imgPreview.dataset.img = foundSale.image; // ✅ 추가
     imgBox.style.display = "block";   // 🔥 핵심
     currentImageBase64 = foundSale.image;
 
@@ -480,7 +477,6 @@ imgInput.addEventListener("change", async () => {
   currentImageBase64 = await compressImage(file);
 
   imgPreview.src = currentImageBase64;
-  imgPreview.dataset.img = currentImageBase64; // 🔥 추가
   imgBox.style.display = "block";
 });
 // ✅ 버튼 2개(파일 선택 / 카메라 촬영)
@@ -846,43 +842,6 @@ if (isIOS) {
   };
   document.body.appendChild(s);
 }
-</script>
-
-<!-- ✅ 공통 이미지 크게 보기 모달 -->
-<div id="img-modal" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  z-index:9999;
-  justify-content:center;
-  align-items:center;
-">
-  <img id="img-modal-view" style="
-    max-width:90%;
-    max-height:90%;
-    border-radius:12px;
-  ">
-</div>
-<script>
-// 🔍 이미지 클릭 → 크게 보기 (공통)
-document.addEventListener("click", (e) => {
-  const img = e.target.closest(".product-thumb");
-  if (!img) return;
-
-  if (!img.dataset.img) return; // ✅ 안전 가드 추가
-
-  const modal = document.getElementById("img-modal");
-  const view  = document.getElementById("img-modal-view");
-
-  view.src = img.dataset.img;
-  modal.style.display = "flex";
-});
-
-// 모달 닫기
-document.getElementById("img-modal")?.addEventListener("click", () => {
-  document.getElementById("img-modal").style.display = "none";
-});
 </script>
 </body>
 </html>
