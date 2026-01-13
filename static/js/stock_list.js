@@ -86,11 +86,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     filtered.forEach(item => {
       const qty = Number(item.qty || 0);
-
       // 배지(재고 위험도)
       let badgeClass = "";
       let badgeText = `${qty.toLocaleString()}개`;
-
       if (qty <= 5) {
         badgeClass = "low";
         badgeText = `부족 ${qty.toLocaleString()}개`;
@@ -98,49 +96,51 @@ document.addEventListener("DOMContentLoaded", () => {
         badgeClass = "warn";
         badgeText = `주의 ${qty.toLocaleString()}개`;
       }
-
       const card = document.createElement("div");
       card.className = "card";
-
-      const title = escapeHtml(item.productName || "-");
+      const name = escapeHtml(item.productName || "-");
       const bc = escapeHtml(item.barcode || "-");
-
       const hideBtn = qty === 0
         ? `<button class="mini danger" type="button" data-action="hide" data-barcode="${escapeAttr(item.barcode || "")}">숨김</button>`
         : "";
-
-         const imgSrc = productImageMap[item.barcode] || "";
-
-          card.innerHTML = `
-            ${imgSrc ? `
-              <div class="thumb-wrap">
-                <img
-                  src="${imgSrc}"
-                  class="thumb-img"
-                  data-img="${imgSrc}"
-                >
-              </div>
-            ` : ``}
-
-            <div class="card-top">
-              <div>
-                <p class="card-title">${escapeHtml(item.productName || "-")}</p>
-                <div class="card-meta">바코드 ${escapeHtml(item.barcode || "-")}</div>
-              </div>
-              <span class="badge ${badgeClass}">${badgeText}</span>
-            </div>
-          `;
-
-          // Remove any unintended borders or backgrounds from nested divs inside product cards.
-          // Some browsers may apply default border or box-shadow to nested blocks which results in a thin inner border at the top of each card.
-          // By explicitly clearing these styles here we make sure only the outer card has a shadow/border.
-          card.querySelectorAll('div').forEach(el => {
-            el.style.border = 'none';
-            el.style.boxShadow = 'none';
-            el.style.background = 'transparent';
-          });
-            
-
+      const imgSrc = productImageMap[item.barcode] || "";
+      // Build body content: image and hide button
+      const bodyParts = [];
+      if (imgSrc) {
+        bodyParts.push(`
+          <div class="thumb-wrap">
+            <img src="${imgSrc}" class="thumb-img" data-img="${imgSrc}">
+          </div>
+        `);
+      }
+      if (hideBtn) {
+        bodyParts.push(`<div class="row-actions">${hideBtn}</div>`);
+      }
+      card.innerHTML = `
+        <div class="product-head">
+          <div>
+            <p class="card-title">${name}</p>
+            <div class="card-meta">바코드 ${bc}</div>
+          </div>
+          <span class="badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="product-body">
+          ${bodyParts.join("")}
+        </div>
+      `;
+      const head = card.querySelector('.product-head');
+      const body = card.querySelector('.product-body');
+      if (head && body) {
+        head.addEventListener('click', () => {
+          body.style.display = body.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+      // Remove any unintended borders or backgrounds from nested divs inside product cards.
+      card.querySelectorAll('div').forEach(el => {
+        el.style.border = 'none';
+        el.style.boxShadow = 'none';
+        el.style.background = 'transparent';
+      });
       listBox.appendChild(card);
     });
   }
@@ -276,6 +276,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = "";
 
+    // 이미지 맵 로드 (상품 바코드 -> 썸네일)
+    const productImageMap = JSON.parse(
+      localStorage.getItem("product_image_map") || "{}"
+    );
+
     // 1️⃣ 상품 목록
     items.forEach(it => {
       const name = escapeHtml(it.productName || "-");
@@ -286,52 +291,72 @@ document.addEventListener("DOMContentLoaded", () => {
       const memo = (it.memo || "").trim();
       const memoId = `memo_${bc}_${Math.random().toString(36).slice(2,8)}`;
 
+      // 이미지 경로 (없을 시 빈 문자열)
+      const imgSrc = productImageMap[it.barcode] || "";
+
+      // 메모 토글 여부
+      let memoHtml = "";
+      if (memo) {
+        const lines = memo.split("\n").filter(l => l.trim()).length;
+        const needToggle = lines >= 2;
+        memoHtml = `
+          <div
+            id="${memoId}"
+            class="product-memo ${needToggle ? "collapsed" : ""}"
+            style="
+              white-space: pre-wrap;
+              font-size:12px;
+              color:#666;
+              margin-top:6px;
+            "
+          >
+            ${escapeHtml(memo)}
+          </div>
+          ${
+            needToggle
+              ? `
+            <div
+              class="memo-toggle"
+              data-target="${memoId}"
+              style="
+                font-size:12px;
+                color:#007aff;
+                margin-top:4px;
+                cursor:pointer;
+                user-select:none;
+              "
+            >
+              더보기
+            </div>
+          `
+              : ``
+          }
+        `;
+      }
+
       html += `
         <div class="store-row">
-          <div class="pname">${name}</div>
-          <div class="pcode">${bc}</div>
-
-          <div class="pqty">
-            가격 ${price.toLocaleString()}원 ·
-            납품 ${qty.toLocaleString()}개 ·
-            납품금액 ${amount.toLocaleString()}원
-          </div>
-
-          ${memo ? (() => {
-            const lines = memo.split("\n").filter(l => l.trim()).length;
-            const needToggle = lines >= 2;
-
-            return `
-              <div
-                id="${memoId}"
-                class="product-memo ${needToggle ? "collapsed" : ""}"
-                style="
-                  white-space: pre-wrap;
-                  font-size:12px;
-                  color:#666;
-                  margin-top:6px;
-                "
-              >
-                ${escapeHtml(memo)}
+          <div class="thumb-wrap">
+            ${
+              imgSrc
+                ? `<img
+                     src="${imgSrc}"
+                     class="thumb-img"
+                     data-img="${imgSrc}"
+                   >`
+                : ``
+            }
+            <div style="flex:1;">
+              <div class="pname">${name}</div>
+              <div class="pcode">${bc}</div>
+              <div class="pqty">
+                가격 ${price.toLocaleString()}원 ·
+                납품 ${qty.toLocaleString()}개 ·
+                납품금액 ${amount.toLocaleString()}원
               </div>
-
-              ${needToggle ? `
-                <div
-                  class="memo-toggle"
-                  data-target="${memoId}"
-                  style="
-                    font-size:12px;
-                    color:#007aff;
-                    margin-top:4px;
-                    cursor:pointer;
-                    user-select:none;
-                  "
-                >
-                  더보기
-                </div>
-              ` : ``}
-            `;
-          })() : ``}
+              ${memoHtml}
+            </div>
+          </div>
         </div>
       `;
     });
