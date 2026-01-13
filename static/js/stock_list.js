@@ -266,34 +266,41 @@ document.addEventListener("DOMContentLoaded", () => {
             납품금액 ${amount.toLocaleString()}원
           </div>
 
-          ${memo ? `
-            <div
-              id="${memoId}"
-              class="product-memo collapsed"
-              style="
-                white-space: pre-wrap;
-                font-size:12px;
-                color:#666;
-                margin-top:6px;
-              "
-            >
-              ${escapeHtml(memo)}
-            </div>
+          ${memo ? (() => {
+            const lines = memo.split("\n").filter(l => l.trim()).length;
+            const needToggle = lines >= 2;
 
-            <div
-              class="memo-toggle"
-              data-target="${memoId}"
-              style="
-                font-size:12px;
-                color:#007aff;
-                margin-top:4px;
-                cursor:pointer;
-                user-select:none;
-              "
-            >
-              더보기
-            </div>
-          ` : ``}
+            return `
+              <div
+                id="${memoId}"
+                class="product-memo ${needToggle ? "collapsed" : ""}"
+                style="
+                  white-space: pre-wrap;
+                  font-size:12px;
+                  color:#666;
+                  margin-top:6px;
+                "
+              >
+                ${escapeHtml(memo)}
+              </div>
+
+              ${needToggle ? `
+                <div
+                  class="memo-toggle"
+                  data-target="${memoId}"
+                  style="
+                    font-size:12px;
+                    color:#007aff;
+                    margin-top:4px;
+                    cursor:pointer;
+                    user-select:none;
+                  "
+                >
+                  더보기
+                </div>
+              ` : ``}
+            `;
+          })() : ``}
         </div>
       `;
     });
@@ -400,6 +407,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list.includes(bc)) list.push(bc);
     localStorage.setItem("product_hidden_list", JSON.stringify(list));
     location.reload();
+  });
+
+  document.addEventListener("click", (e) => {
+    const toggle = e.target.closest(".memo-toggle");
+    if (!toggle) return;
+
+    const targetId = toggle.dataset.target;
+    const memoBox = document.getElementById(targetId);
+    if (!memoBox) return;
+
+    const collapsed = memoBox.classList.toggle("collapsed");
+    toggle.textContent = collapsed ? "더보기" : "접기";
   });
 
   // =========================
