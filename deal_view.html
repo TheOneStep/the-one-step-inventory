@@ -133,6 +133,12 @@ if (!key || !id) {
       box.innerHTML = `
         <h3>납품 상세</h3>
 
+        ${imageSrc ? `
+          <div class="img-card">
+            <img src="${imageSrc}" alt="상품 이미지">
+          </div>
+        ` : ""}
+
         <div class="row"><div class="label">거래처</div><div class="value">${item.partner || ""}</div></div>
         <div class="row"><div class="label">상품명</div><div class="value">${item.productName || item.name || ""}</div></div>
         <div class="row"><div class="label">바코드</div><div class="value">${item.barcode || ""}</div></div>
