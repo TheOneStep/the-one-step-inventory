@@ -194,14 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* 🔽 여기 바로 추가 */
-  const editBtn = card.querySelector(".btn-edit");
-  if (editBtn) {
-    editBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-  }
-
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".btn-edit");
     if (!btn) return;
