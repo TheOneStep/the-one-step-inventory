@@ -267,7 +267,8 @@
         <label>상품 이미지 (최근 매입)</label>
         <img
           id="purchase-image"
-          style="max-width:100%; border-radius:10px;"
+          data-img=""
+          style="max-width:100%; border-radius:10px; cursor:pointer;"
         >
       </div>
 
@@ -570,6 +571,7 @@
       const img = findLatestPurchaseImage(code);
       if (img) {
         purchaseImageEl.src = img;
+        purchaseImageEl.dataset.img = img; // ✅ 핵심
         purchaseImageBox.style.display = "block";
       } else {
         purchaseImageBox.style.display = "none";
@@ -774,6 +776,7 @@
       const img = findLatestPurchaseImage(code);
       if (img) {
         purchaseImageEl.src = img;
+        purchaseImageEl.dataset.img = img; // ✅ 이 줄 추가
         purchaseImageBox.style.display = "block";
       } else {
         purchaseImageBox.style.display = "none";
@@ -795,7 +798,10 @@ btnAdd.addEventListener("click", () => {
     price: parseNumber(priceEl.value),
     qty: parseNumber(qtyEl.value),
     stockAmount: parseNumber(priceEl.value) * parseNumber(qtyEl.value),
-    memo: memoEl.value.trim()
+    memo: memoEl.value.trim(),
+
+    // ✅ 최근 매입 이미지 연결
+    image: findLatestPurchaseImage(barcodeEl.value.trim())
   };
 
   if (!item.barcode || !item.productName) {
@@ -883,13 +889,13 @@ btnAdd.addEventListener("click", () => {
           qty: it.qty,
           memo: it.memo,
 
-          // ✅ 거래처 기준 정보 (모든 상품 동일)
+          // ✅ 이미지 저장
+          image: it.image || null,
+
           paid: paidTotal,
           stockAmount: stockTotal,
-
           returnNote,
-          storeMemo,          
-
+          storeMemo,
           createdAt: new Date().toISOString()
         });
         // ✅ 납품 가격 기억 (거래처 + 바코드 기준)
@@ -973,6 +979,45 @@ btnAdd.addEventListener("click", () => {
         priceEl
       });
     });
+  </script>
+  <!-- 🖼 이미지 확대 모달 -->
+  <div id="img-modal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+  ">
+    <img id="img-modal-view" style="
+      max-width:90%;
+      max-height:90%;
+      border-radius:12px;
+      background:#fff;
+    ">
+  </div>
+  <script>
+  /* =========================
+    🖼 이미지 클릭 → 크게 보기
+    ========================= */
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest("img[data-img]");
+    if (!img) return;
+
+    const modal = document.getElementById("img-modal");
+    const view  = document.getElementById("img-modal-view");
+
+    view.src = img.dataset.img;
+    modal.style.display = "flex";
+  });
+
+  /* =========================
+    ❌ 모달 클릭 → 닫기
+    ========================= */
+  document.getElementById("img-modal").addEventListener("click", () => {
+    document.getElementById("img-modal").style.display = "none";
+  });
   </script>
 </body>
 </html>
