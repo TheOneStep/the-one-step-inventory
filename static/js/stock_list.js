@@ -212,10 +212,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 🔥 sales_list 직접 수정
     let changed = false;
+    let first = true;
+
     sales.forEach(s => {
       if ((s.partner || s.storeName || "") === oldStoreName) {
-        s.partner = newStoreName;   // 거래처명 변경
-        s.paid = paidValue;         // 수금 금액 변경
+        s.partner = newStoreName;
+
+        if (first) {
+          s.paid = paidValue; // ✅ 딱 한 번만 저장
+          first = false;
+        } else {
+          s.paid = 0;         // ✅ 나머지는 0
+        }
+
         changed = true;
       }
     });
