@@ -139,15 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      /* ================================
-        🖼 ②번 수정: 썸네일 클릭 시
-        카드 토글로 이벤트 전파 차단
-        ================================ */
-      card.addEventListener("click", (e) => {
-        const img = e.target.closest(".thumb-img");
-        if (!img) return;
-        e.stopPropagation();
-      });
       
       // Remove any unintended borders or backgrounds from nested divs inside product cards.
       card.querySelectorAll('div').forEach(el => {
