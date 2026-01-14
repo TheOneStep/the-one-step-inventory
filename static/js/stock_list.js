@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const memoId = `memo_${bc}_${Math.random().toString(36).slice(2,8)}`;
 
       // 이미지 경로 (없을 시 빈 문자열)
-      const imgSrc = productImageMap[it.barcode] || "";
+      const imgSrc = findImageFallback(it.barcode);
 
       // 메모 토글 여부
       let memoHtml = "";
@@ -500,6 +500,23 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================
 // 유틸
 // =========================
+function findImageFallback(barcode){
+  if (!barcode) return "";
+
+  const map = JSON.parse(localStorage.getItem("product_image_map") || "{}");
+  if (map[barcode]) return map[barcode];
+
+  const sales = safeJSON(localStorage.getItem("sales_list"));
+  const s = sales.find(x => x.barcode === barcode && x.image);
+  if (s?.image) return s.image;
+
+  const purchases = safeJSON(localStorage.getItem("purchase_list"));
+  const p = purchases.find(x => x.barcode === barcode && x.image);
+  if (p?.image) return p.image;
+
+  return "";
+}
+
 function safeJSON(raw) {
   if (!raw) return [];
   try {
