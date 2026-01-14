@@ -130,11 +130,25 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       const head = card.querySelector('.product-head');
       const body = card.querySelector('.product-body');
+      // 🔒 초기 상태를 명확히 닫음 (크롬 대응)
+      body.style.display = "none";
+
       if (head && body) {
         head.addEventListener('click', () => {
           body.style.display = body.style.display === 'block' ? 'none' : 'block';
         });
       }
+
+      /* ================================
+        🖼 ②번 수정: 썸네일 클릭 시
+        카드 토글로 이벤트 전파 차단
+        ================================ */
+      card.addEventListener("click", (e) => {
+        const img = e.target.closest(".thumb-img");
+        if (!img) return;
+        e.stopPropagation();
+      });
+      
       // Remove any unintended borders or backgrounds from nested divs inside product cards.
       card.querySelectorAll('div').forEach(el => {
         el.style.border = 'none';
