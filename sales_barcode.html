@@ -440,49 +440,17 @@
 
       const name = productName.trim();
 
-      // 1️⃣ 상품 마스터
-      // 1️⃣ 상품명 자동 채우기 (우선순위 중요)
-if (!nameEl.value) {
-
-  // ① 상품 마스터
-  if (window.ProductMaster) {
-    const m = ProductMaster.get(barcode);
-    if (m?.name) {
-      nameEl.value = m.name;
-    }
-  }
-
-  // ② 최근 납품 데이터 (매출)
-  if (!nameEl.value) {
-    const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
-    const s = [...sales].reverse().find(x => x.barcode === barcode && x.productName);
-    if (s) {
-      nameEl.value = s.productName;
-    }
-  }
-
-  // ③ 최근 매입 데이터
-  if (!nameEl.value) {
-    const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
-    const p = [...purchases].reverse().find(x => x.barcode === barcode && (x.name || x.productName));
-    if (p) {
-      nameEl.value = p.name || p.productName;
-    }
-  }
-}
-
-      // 2️⃣ 기존 매입 데이터
       const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
       const p = purchases.find(x => (x.name || x.productName) === name);
       if (p) return p.barcode || "";
 
-      // 3️⃣ 기존 납품 데이터
       const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
       const s = sales.find(x => x.productName === name);
       if (s) return s.barcode || "";
 
       return "";
     }
+
     // =========================
     // 📦 바코드 기준 자동 채우기 (공통)
     // =========================
@@ -614,23 +582,63 @@ if (!nameEl.value) {
       barcodeHintBox.style.display = "block";
     });
 
+    
+    const purchaseImageBox = document.getElementById("purchase-image-box");
+    const purchaseImageEl  = document.getElementById("purchase-image");
+    const nameEl    = document.getElementById("input-name");
+    const suggestBox = document.getElementById("name-suggest");
+    const priceEl   = document.getElementById("price");
+
+    suggestBox.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-barcode]");
+      if (!item) return;
+
+      const name = item.dataset.name;
+      const barcode = item.dataset.barcode;
+
+      nameEl.value = name;
+      barcodeEl.value = barcode;
+
+      suggestBox.style.display = "none";
+
+      // 기존 자동 채우기 로직 재사용
+      autoFillByBarcode({
+        barcode,
+        partner: partnerEl.value.trim(),
+        nameEl,
+        priceEl
+      });
+    });
+
     // ✅ 클릭 → 전체 바코드 입력
     barcodeHintBox.addEventListener("click", (e) => {
       const item = e.target.closest("[data-barcode]");
       if (!item) return;
 
-      barcodeEl.value = item.dataset.barcode;
-      barcodeHintBox.style.display = "none";
-      // 🔥 여기서 이름 초기화
+      const code = item.dataset.barcode;
+
+      barcodeEl.value = code;
       nameEl.value = "";
       priceEl.value = "";
-      // 기존 자동 채우기 로직 재사용
-      barcodeEl.dispatchEvent(new Event("input"));
+
+      autoFillByBarcode({
+        barcode: code,
+        partner: partnerEl.value.trim(),
+        nameEl,
+        priceEl
+      });
+
+      const img = findLatestPurchaseImage(code);
+      if (img) {
+        purchaseImageEl.src = img;
+        purchaseImageEl.dataset.img = img;
+        purchaseImageBox.style.display = "block";
+      } else {
+        purchaseImageBox.style.display = "none";
+      }
+
+      barcodeHintBox.style.display = "none";
     });
-    const purchaseImageBox = document.getElementById("purchase-image-box");
-    const purchaseImageEl  = document.getElementById("purchase-image");
-    const nameEl    = document.getElementById("input-name");
-    const suggestBox = document.getElementById("name-suggest");
 
     nameEl.addEventListener("input", () => {
       const keyword = nameEl.value.trim();
@@ -661,7 +669,9 @@ if (!nameEl.value) {
 
       suggestBox.style.display = "block";
     });
-    const priceEl   = document.getElementById("price");
+    
+
+    
     // =========================
     // ✍️ 상품명 입력 → 바코드 자동 채우기
     // =========================
@@ -690,13 +700,16 @@ if (!nameEl.value) {
     // =========================
     barcodeEl.addEventListener("input", () => {
       const raw = barcodeEl.value.trim();
-      if (!code) return;
+      if (!raw) return;
+      if (barcodeHintBox.style.display === "block") return;
+      // 🔒 1~4자리는 힌트 전용 (자동채우기 차단)
+      if (/^\d{1,4}$/.test(raw)) return;
 
-      const code = resolveBarcodeBySuffix(raw); // ⭐ 핵심
+      const code = resolveBarcodeBySuffix(raw); // ⭐ 먼저 선언
 
       autoFillByBarcode({
         barcode: code,
-        partner: typeof partnerEl !== "undefined" ? partnerEl.value.trim() : "",
+        partner: partnerEl.value.trim(),
         nameEl,
         priceEl
       });
@@ -704,11 +717,11 @@ if (!nameEl.value) {
       const img = findLatestPurchaseImage(code);
       if (img) {
         purchaseImageEl.src = img;
-        purchaseImageEl.dataset.img = img; // ✅ 핵심
+        purchaseImageEl.dataset.img = img;
         purchaseImageBox.style.display = "block";
       } else {
         purchaseImageBox.style.display = "none";
-      }  
+      }
     });
     const qtyEl     = document.getElementById("qty");
     const paidEl    = document.getElementById("paid");
@@ -1092,26 +1105,7 @@ btnAdd.addEventListener("click", () => {
       };
       document.body.appendChild(script);
     }
-    suggestBox.addEventListener("click", (e) => {
-      const item = e.target.closest("[data-barcode]");
-      if (!item) return;
-
-      const name = item.dataset.name;
-      const barcode = item.dataset.barcode;
-
-      nameEl.value = name;
-      barcodeEl.value = barcode;
-
-      suggestBox.style.display = "none";
-
-      // 기존 자동 채우기 로직 재사용
-      autoFillByBarcode({
-        barcode,
-        partner: partnerEl.value.trim(),
-        nameEl,
-        priceEl
-      });
-    });
+    
   </script>
   <!-- 🖼 이미지 확대 모달 -->
   <div id="img-modal" style="
