@@ -715,7 +715,9 @@
 
       // ✅ 2) 이전 값 완전 초기화
       nameEl.value = "";
-      priceEl.value = "";
+      if (!isAutoFilling) {
+        priceEl.value = "";
+      }
 
       // ✅ 3) 이제 이 “확정된 바코드”로만 조회
       autoFillByBarcode({
@@ -811,7 +813,9 @@
       barcodeEl.value = code;
 
       // ✅ 가격 초기화
-      priceEl.value = "";
+      if (!isAutoFilling) {
+        priceEl.value = "";
+      }
 
       // ✅ 확정된 바코드로만 가격 조회
       autoFillByBarcode({
@@ -1021,7 +1025,9 @@
       // formEl.style.display = "block";
 
       barcodeEl.value = code;
-      priceEl.value = "";
+      if (!isAutoFilling) {
+        priceEl.value = "";
+      }
 
       autoFillByBarcode({
         barcode: code,
