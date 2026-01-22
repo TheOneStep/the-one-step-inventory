@@ -405,6 +405,72 @@ const imgPreview = document.getElementById("image-preview");
 const imgBox = document.getElementById("image-box");
 
 const barcodeEl = document.getElementById("input-barcode");
+
+// =========================
+// 🔎 바코드 뒷자리(4자리 이하) 후보 클릭 입력
+// =========================
+const barcodeHintBox = document.createElement("div");
+barcodeHintBox.style.cssText = `
+  display:none;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:8px;
+  margin-top:4px;
+  max-height:160px;
+  overflow-y:auto;
+  text-align:left;
+  font-size:14px;
+  position:relative;
+  z-index:50;
+`;
+barcodeEl.parentNode.appendChild(barcodeHintBox);
+
+barcodeEl.addEventListener("input", () => {
+  const v = barcodeEl.value.trim();
+
+  // 🔒 1~4자리 숫자만 허용
+  if (!/^\d{1,4}$/.test(v)) {
+    barcodeHintBox.style.display = "none";
+    return;
+  }
+
+  const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+  const sales     = JSON.parse(localStorage.getItem("sales_list") || "[]");
+  const all = [...purchases, ...sales];
+
+  const matches = all
+    .filter(it => it.barcode && it.barcode.endsWith(v))
+    .slice(0, 10); // 최대 10개
+
+  if (!matches.length) {
+    barcodeHintBox.style.display = "none";
+    return;
+  }
+
+  barcodeHintBox.innerHTML = matches.map(it => `
+    <div
+      style="padding:8px 10px; cursor:pointer;"
+      data-barcode="${it.barcode}"
+    >
+      ${it.barcode}
+    </div>
+  `).join("");
+
+  barcodeHintBox.style.display = "block";
+});
+
+// ✅ 클릭 → 전체 바코드 입력
+barcodeHintBox.addEventListener("click", (e) => {
+  const item = e.target.closest("[data-barcode]");
+  if (!item) return;
+
+  barcodeEl.value = item.dataset.barcode;
+  barcodeHintBox.style.display = "none";
+
+  // 기존 자동 채우기 로직 재사용
+  barcodeEl.dispatchEvent(new Event("input"));
+});
+
 barcodeEl.addEventListener("change", () => {
   loadImageByBarcode(barcodeEl.value.trim());
 });
