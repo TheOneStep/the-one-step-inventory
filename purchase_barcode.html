@@ -438,9 +438,19 @@ barcodeEl.addEventListener("input", () => {
   const sales     = JSON.parse(localStorage.getItem("sales_list") || "[]");
   const all = [...purchases, ...sales];
 
+  // 🔑 바코드 기준 중복 제거
+  const seen = new Set();
+
   const matches = all
-    .filter(it => it.barcode && it.barcode.endsWith(v))
-    .slice(0, 10); // 최대 10개
+    .filter(it => {
+      if (!it.barcode) return false;
+      if (!it.barcode.endsWith(v)) return false;
+      if (seen.has(it.barcode)) return false;
+
+      seen.add(it.barcode);
+      return true;
+    })
+    .slice(0, 10);
 
   if (!matches.length) {
     barcodeHintBox.style.display = "none";
