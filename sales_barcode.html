@@ -191,7 +191,7 @@
 
 <body>
   <div class="page-container">
-    <h1>납품 바코드 등록5</h1>
+    <h1>납품 바코드 등록</h1>
 
     <!-- 1) 납품일자 -->
     <div class="field">
@@ -374,20 +374,40 @@
     function rand6() {
       return Math.random().toString(36).slice(2, 8);
     }
+    // =========================
+    // ✅ 문자열 정규화 (거래처/바코드)
+    // =========================
+    function normalizePartner(v) {
+      // NBSP(\u00A0) 제거 + 연속 공백 1개로 + 앞뒤 공백 제거
+      return String(v || "")
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function normalizeBarcode(v) {
+      // 바코드는 공백/이상문자 제거 후 trim
+      return String(v || "")
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, "")
+        .trim();
+    }
     // ✅ 바코드 끝자리 입력 허용 (매입/납품 전체 기준)
     function resolveBarcodeBySuffix(input) {
-      if (!input) return input;
+      const normalized = normalizeBarcode(input);
+      if (!normalized) return "";
 
       const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
       const sales     = JSON.parse(localStorage.getItem("sales_list") || "[]");
       const all = [...purchases, ...sales];
 
-      // 이미 전체 바코드면 그대로
-      if (all.some(i => i.barcode === input)) return input;
+      // ✅ 1) 이미 "전체 바코드"면: 저장된 '정상 바코드'로 정규화해서 반환
+      const exact = all.find(i => normalizeBarcode(i.barcode) === normalized);
+      if (exact && exact.barcode) return exact.barcode;
 
-      // 끝자리 매칭
-      const found = all.find(i => i.barcode && i.barcode.endsWith(input));
-      return found ? found.barcode : input;
+      // ✅ 2) 끝자리(서픽스) 매칭도 정규화 기반으로
+      const found = all.find(i => normalizeBarcode(i.barcode).endsWith(normalized));
+      return found ? found.barcode : normalized;
     }
 
 
@@ -402,7 +422,7 @@
       // 최신 매입부터 역순 검색
       for (let i = list.length - 1; i >= 0; i--) {
         const it = list[i];
-        if (it.barcode === barcode && it.image) {
+        if (normalizeBarcode(it.barcode) === normalizeBarcode(barcode) && it.image)  {
           return it.image;
         }
       }
@@ -410,26 +430,45 @@
     }
 
     // =========================
+    // ✅ (3번) sales_list 기반 가격 캐시 (성능 개선)
+    // - 페이지 로드시 1회 생성
+    // - 저장할 때도 갱신
+    // =========================
+    let salesPriceCache = new Map();
+
+    function buildSalesPriceCache() {
+      salesPriceCache = new Map();
+
+      const list = JSON.parse(localStorage.getItem("sales_list") || "[]");
+
+      // 오래된 것 → 최신 순으로 훑으면서 마지막 값을 남기면 "최신 가격"이 됨
+      for (let i = 0; i < list.length; i++) {
+        const it = list[i];
+        const partner = normalizePartner(it.partner);
+        const barcode = normalizeBarcode(it.barcode);
+        const price = Number(it.price) || 0;
+
+        if (!partner || !barcode || price <= 0) continue;
+
+        const key = `${partner}|${barcode}`;
+        salesPriceCache.set(key, price);
+      }
+    }
+
+    // ✅ 페이지 로드시 캐시 생성
+    buildSalesPriceCache();
+
+    // =========================
     // 🔎 납품 이력 기준 최근 가격 조회
     // 기준: 거래처 + 바코드
     // =========================
     function findLastSalesPrice(partner, barcode) {
-      if (!partner || !barcode) return null;
+      const p = normalizePartner(partner);
+      const b = normalizeBarcode(barcode);
+      if (!p || !b) return null;
 
-      const list = JSON.parse(localStorage.getItem("sales_list") || "[]");
-
-      // 최신 납품부터 역순 탐색
-      for (let i = list.length - 1; i >= 0; i--) {
-        const it = list[i];
-        if (
-          it.partner === partner &&
-          it.barcode === barcode &&
-          Number(it.price) > 0
-        ) {
-          return Number(it.price);
-        }
-      }
-      return null;
+      const key = `${p}|${b}`;
+      return salesPriceCache.has(key) ? Number(salesPriceCache.get(key)) : null;
     }
 
     // =========================
@@ -520,6 +559,9 @@
           const code = resolveBarcodeBySuffix(barcode);
           const lastPrice = findLastSalesPrice(partner, code);
 
+          // 🔒 사용자가 이미 가격을 입력한 경우 자동 덮어쓰기 금지
+          const userTypedPrice = parseNumber(priceEl.value) > 0;
+
           if (lastPrice && (forcePrice || !priceEl.value)) {
             priceEl.value = formatNumber(lastPrice);
           }
@@ -539,7 +581,7 @@
     // 🔄 거래처 변경 시 가격 재적용 (핵심 수정)
     // =========================
     partnerEl.addEventListener("blur", () => {
-      const partner = partnerEl.value.trim();
+      const partner = normalizePartner(partnerEl.value);
       const barcode = barcodeEl.value.trim();
 
       if (!partner || !barcode) return;
@@ -616,7 +658,7 @@
       if (barcode) {
         autoFillByBarcode({
           barcode,
-          partner: partnerEl.value.trim(),
+          partner: normalizePartner(partnerEl.value),
           nameEl,
           priceEl,
           forcePrice: true   // 🔥 핵심
@@ -626,7 +668,14 @@
 
     function getAllPartners() {
       const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
-      return [...new Set(sales.map(s => s.partner).filter(Boolean))];
+      const set = new Set();
+
+      sales.forEach(s => {
+        const p = normalizePartner(s.partner);
+        if (p) set.add(p);
+      });
+
+      return Array.from(set);
     }
 
     const barcodeSpan = document.getElementById("barcode-value");
@@ -672,7 +721,7 @@
       const matches = all
         .filter(it => {
           if (!it.barcode) return false;
-          if (!it.barcode.endsWith(v)) return false;
+          if (!normalizeBarcode(it.barcode).endsWith(normalizeBarcode(v))) return false;
           if (seen.has(it.barcode)) return false;
 
           seen.add(it.barcode);
@@ -719,7 +768,7 @@
       // 기존 자동 채우기 로직 재사용
       autoFillByBarcode({
         barcode,
-        partner: partnerEl.value.trim(),
+        partner: normalizePartner(partnerEl.value),
         nameEl,
         priceEl
       });
@@ -744,7 +793,7 @@
       // ✅ 3) 이제 이 “확정된 바코드”로만 조회
       autoFillByBarcode({
         barcode: code,
-        partner: partnerEl.value.trim(),
+        partner: normalizePartner(partnerEl.value),
         nameEl,
         priceEl,
       });
@@ -813,7 +862,7 @@
       // 바코드가 채워졌으니 기존 바코드 기준 자동 채우기 로직 실행
       autoFillByBarcode({
         barcode: foundBarcode,
-        partner: partnerEl.value.trim(),
+        partner: normalizePartner(partnerEl.value),
         nameEl,
         priceEl
       });
@@ -842,7 +891,7 @@
       // ✅ 확정된 바코드로만 가격 조회
       autoFillByBarcode({
         barcode: code,
-        partner: partnerEl.value.trim(),
+        partner: normalizePartner(partnerEl.value),
         nameEl,
         priceEl,
       });
@@ -1053,7 +1102,7 @@
 
       autoFillByBarcode({
         barcode: code,
-        partner: partnerEl.value.trim(),
+        partner: normalizePartner(partnerEl.value),
         nameEl,
         priceEl,
       });
@@ -1134,7 +1183,7 @@ btnAdd.addEventListener("click", () => {
     // =========================
     btnSaveAll.addEventListener("click", () => {
       const saleDate = saleDateEl.value;
-      const partner  = partnerEl.value.trim();
+      const partner  = normalizePartner(partnerEl.value);
 
       if (!saleDate) {
         alert("납품일자를 선택해 주세요.");
@@ -1172,21 +1221,27 @@ btnAdd.addEventListener("click", () => {
           price: it.price,
           qty: it.qty,
           memo: it.memo,
-
-          // ✅ 이미지 저장
           image: it.image || null,
-
           paid: paidTotal,
           stockAmount: stockTotal,
           returnNote,
           storeMemo,
           createdAt: new Date().toISOString()
         });
-        // ✅ 납품 가격 기억 (거래처 + 바코드 기준)
+
+        // ✅ (3번) 캐시 즉시 갱신: 항목별로 업데이트
+        const cachePartner = normalizePartner(partner);
+        const cacheBarcode = normalizeBarcode(it.barcode);
+        if (cachePartner && cacheBarcode && Number(it.price) > 0) {
+          salesPriceCache.set(`${cachePartner}|${cacheBarcode}`, Number(it.price));
+        }
+
+        // ✅ 납품 가격 기억(보조)
         if (window.SalesPriceMaster && it.price > 0) {
           SalesPriceMaster.set(partner, it.barcode, it.price);
         }
       });
+
       localStorage.setItem(key, JSON.stringify(list));
       saleCart.clear();
       localStorage.removeItem("sales_cart_tmp"); // ✅ 임시 카트 완전 초기화
