@@ -474,15 +474,13 @@
       partner = "",
       nameEl,
       priceEl,
-      forcePrice = false   // ✅ 추가
+      forcePrice = false
     }) {
       if (!barcode) return;
 
-      // 🔒 자동 입력 시작
       isAutoFilling = true;
-
       try {
-        // 1️⃣ 상품명: 상품 마스터
+        // ✅ 상품명만 채움
         if (window.ProductMaster) {
           const m = ProductMaster.get(barcode);
           if (m?.name && !nameEl.value) {
@@ -490,45 +488,21 @@
           }
         }
 
-        // ✅ 여기 (지금 없음)
         if (!nameEl.value) {
           const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
           const p = purchases.find(x => x.barcode === barcode);
-          if (p) {
-            nameEl.value = p.productName || p.name || "";
-          }
+          if (p) nameEl.value = p.productName || p.name || "";
         }
 
-        // 2️⃣ 거래처 기준 납품 가격 (최우선)
-        if (partner && window.SalesPriceMaster && priceEl) {
+        // ✅ 가격은 거래처 기준 ONLY
+        if (partner && window.SalesPriceMaster) {
           const p = SalesPriceMaster.get(partner, barcode);
           if (p && (forcePrice || !priceEl.value)) {
             priceEl.value = formatNumber(p);
-            return;
           }
         }
 
-        // 3️⃣ 최근 납품 가격
-        const sales = JSON.parse(localStorage.getItem("sales_list") || "[]")
-          .filter(s => s.barcode === barcode);
-
-        if (sales.length && !priceEl.value) {
-          const last = sales[sales.length - 1];
-          if (last.price) {
-            priceEl.value = formatNumber(last.price);
-            return;
-          }
-        }
-
-        // 5️⃣ 최후 fallback: 상품 마스터 가격
-        if (window.ProductMaster && priceEl && !priceEl.value) {
-          const m = ProductMaster.get(barcode);
-          if (m?.price) {
-            priceEl.value = formatNumber(m.price);
-          }
-        }
       } finally {
-        // 🔒 자동 입력 종료 (반드시 실행)
         isAutoFilling = false;
       }
     }
@@ -748,7 +722,6 @@
         partner: partnerEl.value.trim(),
         nameEl,
         priceEl,
-        forcePrice: true
       });
 
       const img = findLatestPurchaseImage(code);
@@ -845,7 +818,6 @@
         partner: partnerEl.value.trim(),
         nameEl,
         priceEl,
-        forcePrice: true
       });
 
       const img = findLatestPurchaseImage(code);
@@ -1055,7 +1027,6 @@
         partner: partnerEl.value.trim(),
         nameEl,
         priceEl,
-        forcePrice: true
       });
       const img = findLatestPurchaseImage(code);
       if (img) {
