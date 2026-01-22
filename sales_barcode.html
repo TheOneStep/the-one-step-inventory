@@ -359,6 +359,22 @@
     function rand6() {
       return Math.random().toString(36).slice(2, 8);
     }
+    // ✅ 바코드 끝자리 입력 허용 (매입/납품 전체 기준)
+    function resolveBarcodeBySuffix(input) {
+      if (!input) return input;
+
+      const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+      const sales     = JSON.parse(localStorage.getItem("sales_list") || "[]");
+      const all = [...purchases, ...sales];
+
+      // 이미 전체 바코드면 그대로
+      if (all.some(i => i.barcode === input)) return input;
+
+      // 끝자리 매칭
+      const found = all.find(i => i.barcode && i.barcode.endsWith(input));
+      return found ? found.barcode : input;
+    }
+
 
     // =========================
     // 🖼️ 최근 매입 이미지 찾기
@@ -793,7 +809,7 @@ let editingTempId = null;
 btnAdd.addEventListener("click", () => {
   const item = {
     tempId: editingTempId || ("s_tmp_" + Date.now() + "_" + rand6()),
-    barcode: barcodeEl.value.trim(),
+    barcode: resolveBarcodeBySuffix(barcodeEl.value.trim()),
     productName: nameEl.value.trim(),
     price: parseNumber(priceEl.value),
     qty: parseNumber(qtyEl.value),
