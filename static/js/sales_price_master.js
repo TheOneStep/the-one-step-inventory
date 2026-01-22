@@ -53,7 +53,10 @@
     set(storeName, barcode, price) {
       const key = makeKey(storeName, barcode);
       if (!key) return;
-      if (!price || Number(price) <= 0) return;
+      const p = Number(String(price).replace(/,/g, ""));
+      if (isNaN(p) || p <= 0) return;
+
+      price = p;
 
       const map = load();
 
