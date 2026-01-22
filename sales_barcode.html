@@ -589,6 +589,17 @@
 
       partnerEl.value = item.dataset.name;
       partnerSuggestBox.style.display = "none";
+
+      // ✅ 거래처 선택 후 가격 재적용
+      const barcode = barcodeEl.value.trim();
+      if (barcode) {
+        autoFillByBarcode({
+          barcode,
+          partner: partnerEl.value.trim(),
+          nameEl,
+          priceEl
+        });
+      }
     });
 
     function getAllPartners() {
