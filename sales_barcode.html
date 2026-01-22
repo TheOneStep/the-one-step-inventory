@@ -351,6 +351,18 @@
     // =========================
     // 0) 유틸
     // =========================
+    // =========================
+    // 🔤 한글 초성 추출 유틸
+    // =========================
+    const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+
+    function getChosung(str) {
+      return Array.from(str).map(ch => {
+        const code = ch.charCodeAt(0) - 44032;
+        if (code < 0 || code > 11171) return ch;
+        return CHO[Math.floor(code / 588)];
+      }).join("");
+    }
     // 🔒 자동 입력 중 여부 (안정화 플래그)
     let isAutoFilling = false;
     function parseNumber(val) {
@@ -519,6 +531,70 @@
     // =========================
     const saleDateEl = document.getElementById("saleDate");
     const partnerEl  = document.getElementById("partner");
+    // =========================
+    // 🏪 거래처 자동완성 박스
+    // =========================
+    const partnerSuggestBox = document.createElement("div");
+    partnerSuggestBox.style.cssText = `
+      display:none;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:8px;
+      margin-top:4px;
+      max-height:180px;
+      overflow-y:auto;
+      text-align:left;
+      font-size:14px;
+      position:relative;
+      z-index:100;
+    `;
+    partnerEl.parentNode.appendChild(partnerSuggestBox);
+
+    partnerEl.addEventListener("input", () => {
+      const keyword = partnerEl.value.trim();
+      if (!keyword) {
+        partnerSuggestBox.style.display = "none";
+        return;
+      }
+
+      const list = getAllPartners();
+
+      const matches = list.filter(name => {
+        return (
+          name.includes(keyword) ||
+          getChosung(name).includes(keyword)
+        );
+      }).slice(0, 10);
+
+      if (!matches.length) {
+        partnerSuggestBox.style.display = "none";
+        return;
+      }
+
+      partnerSuggestBox.innerHTML = matches.map(name => `
+        <div
+          style="padding:8px 10px; cursor:pointer;"
+          data-name="${name}"
+        >
+          ${name}
+        </div>
+      `).join("");
+
+      partnerSuggestBox.style.display = "block";
+    });
+
+    partnerSuggestBox.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-name]");
+      if (!item) return;
+
+      partnerEl.value = item.dataset.name;
+      partnerSuggestBox.style.display = "none";
+    });
+
+    function getAllPartners() {
+      const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
+      return [...new Set(sales.map(s => s.partner).filter(Boolean))];
+    }
 
     const barcodeSpan = document.getElementById("barcode-value");
     const formEl      = document.getElementById("product-form");
