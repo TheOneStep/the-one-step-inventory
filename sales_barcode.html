@@ -717,15 +717,20 @@
 
       const code = item.dataset.barcode;
 
+      // ✅ 1) 바코드 확정
       barcodeEl.value = code;
+
+      // ✅ 2) 이전 값 완전 초기화
       nameEl.value = "";
       priceEl.value = "";
 
+      // ✅ 3) 이제 이 “확정된 바코드”로만 조회
       autoFillByBarcode({
         barcode: code,
         partner: partnerEl.value.trim(),
         nameEl,
-        priceEl
+        priceEl,
+        forcePrice: true
       });
 
       const img = findLatestPurchaseImage(code);
@@ -808,13 +813,21 @@
       // 🔒 1~4자리는 힌트 전용 (자동채우기 차단)
       if (/^\d{1,4}$/.test(raw)) return;
 
-      const code = resolveBarcodeBySuffix(raw); // ⭐ 먼저 선언
+      const code = resolveBarcodeBySuffix(raw);
 
+      // ✅ 바코드 확정
+      barcodeEl.value = code;
+
+      // ✅ 가격 초기화
+      priceEl.value = "";
+
+      // ✅ 확정된 바코드로만 가격 조회
       autoFillByBarcode({
         barcode: code,
         partner: partnerEl.value.trim(),
         nameEl,
-        priceEl
+        priceEl,
+        forcePrice: true
       });
 
       const img = findLatestPurchaseImage(code);
@@ -1016,11 +1029,15 @@
       barcodeEl.value = code;
       // formEl.style.display = "block";
 
+      barcodeEl.value = code;
+      priceEl.value = "";
+
       autoFillByBarcode({
         barcode: code,
-        partner: typeof partnerEl !== "undefined" ? partnerEl.value.trim() : "",
+        partner: partnerEl.value.trim(),
         nameEl,
-        priceEl
+        priceEl,
+        forcePrice: true
       });
       const img = findLatestPurchaseImage(code);
       if (img) {
