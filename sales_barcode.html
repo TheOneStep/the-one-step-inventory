@@ -623,6 +623,7 @@ if (!nameEl.value) {
       barcodeHintBox.style.display = "none";
       // 🔥 여기서 이름 초기화
       nameEl.value = "";
+      priceEl.value = "";
       // 기존 자동 채우기 로직 재사용
       barcodeEl.dispatchEvent(new Event("input"));
     });
@@ -688,8 +689,10 @@ if (!nameEl.value) {
     // ✍️ 바코드 직접 입력 시 자동 채우기
     // =========================
     barcodeEl.addEventListener("input", () => {
-      const code = barcodeEl.value.trim();
+      const raw = barcodeEl.value.trim();
       if (!code) return;
+
+      const code = resolveBarcodeBySuffix(raw); // ⭐ 핵심
 
       autoFillByBarcode({
         barcode: code,
