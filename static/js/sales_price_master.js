@@ -20,9 +20,24 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   }
 
+  function normalizeStoreName(v) {
+    return String(v || "")
+      .replace(/\u00A0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function normalizeBarcode(v) {
+    return String(v || "")
+      .replace(/\u00A0/g, " ")
+      .trim();
+  }
+
   function makeKey(storeName, barcode) {
-    if (!storeName || !barcode) return null;
-    return `${storeName.trim()}|${barcode}`;
+    const s = normalizeStoreName(storeName);
+    const b = normalizeBarcode(barcode);
+    if (!s || !b) return null;
+    return `${s}|${b}`;
   }
 
   window.SalesPriceMaster = {
