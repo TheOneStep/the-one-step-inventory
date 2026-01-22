@@ -496,7 +496,8 @@
 
         // ✅ 가격은 거래처 기준 ONLY
         if (partner && window.SalesPriceMaster) {
-          const p = SalesPriceMaster.get(partner, barcode);
+          const code = resolveBarcodeBySuffix(barcode);
+          const p = SalesPriceMaster.get(partner, code);
           if (p && (forcePrice || !priceEl.value)) {
             priceEl.value = formatNumber(p);
           }
