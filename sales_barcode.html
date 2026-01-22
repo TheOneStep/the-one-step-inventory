@@ -473,35 +473,52 @@
     }) {
       if (!barcode) return;
 
-      // 1️⃣ 상품 마스터
+      // 1️⃣ 상품명: 상품 마스터
       if (window.ProductMaster) {
         const m = ProductMaster.get(barcode);
-        if (m && !nameEl.value) {
-          nameEl.value = m.name || "";
+        if (m?.name && !nameEl.value) {
+          nameEl.value = m.name;
         }
       }
 
-      // 2️⃣ 거래처 기준 납품 가격 (납품 화면)
+      // 2️⃣ 거래처 기준 납품 가격 (최우선)
       if (partner && window.SalesPriceMaster && priceEl) {
         const p = SalesPriceMaster.get(partner, barcode);
         if (p && !priceEl.value) {
           priceEl.value = formatNumber(p);
+          return;
         }
       }
 
-      // 3️⃣ 기존 매입 / 납품 데이터에서 상품명 보완
-      const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
-      const sales     = JSON.parse(localStorage.getItem("sales_list") || "[]");
+      // 3️⃣ 최근 납품 가격
+      const sales = JSON.parse(localStorage.getItem("sales_list") || "[]")
+        .filter(s => s.barcode === barcode);
 
-      const found =
-        purchases.find(p => p.barcode === barcode) ||
-        sales.find(s => s.barcode === barcode);
+      if (sales.length && !priceEl.value) {
+        const last = sales[sales.length - 1];
+        if (last.price) {
+          priceEl.value = formatNumber(last.price);
+          return;
+        }
+      }
 
-      if (found && !nameEl.value) {
-        nameEl.value = found.productName || found.name || "";
+      // 4️⃣ 최근 매입 상품명 보완
+      if (!nameEl.value) {
+        const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+        const p = purchases.find(x => x.barcode === barcode);
+        if (p) {
+          nameEl.value = p.productName || p.name || "";
+        }
+      }
+
+      // 5️⃣ 최후 fallback: 상품 마스터 가격
+      if (window.ProductMaster && priceEl && !priceEl.value) {
+        const m = ProductMaster.get(barcode);
+        if (m?.price) {
+          priceEl.value = formatNumber(m.price);
+        }
       }
     }
-
     // =========================
     // 1) DOM
     // =========================
@@ -512,7 +529,7 @@
     const formEl      = document.getElementById("product-form");
 
     const barcodeEl = document.getElementById("input-barcode");
-    
+
     // =========================
     // 🔎 바코드 뒷자리(4자리 이하) 후보 클릭 입력
     // =========================
