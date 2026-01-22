@@ -469,7 +469,13 @@
     // =========================
     // 📦 바코드 기준 자동 채우기 (공통)
     // =========================
-    function autoFillByBarcode({ barcode, partner = "", nameEl, priceEl }) {
+    function autoFillByBarcode({
+      barcode,
+      partner = "",
+      nameEl,
+      priceEl,
+      forcePrice = false   // ✅ 추가
+    }) {
       if (!barcode) return;
 
       // 🔒 자동 입력 시작
@@ -496,7 +502,7 @@
         // 2️⃣ 거래처 기준 납품 가격 (최우선)
         if (partner && window.SalesPriceMaster && priceEl) {
           const p = SalesPriceMaster.get(partner, barcode);
-          if (p && !priceEl.value) {
+          if (p && (forcePrice || !priceEl.value)) {
             priceEl.value = formatNumber(p);
             return;
           }
@@ -597,7 +603,8 @@
           barcode,
           partner: partnerEl.value.trim(),
           nameEl,
-          priceEl
+          priceEl,
+          forcePrice: true   // 🔥 핵심
         });
       }
     });
