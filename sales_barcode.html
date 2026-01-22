@@ -441,14 +441,35 @@
       const name = productName.trim();
 
       // 1️⃣ 상품 마스터
-      if (window.ProductMaster) {
-        const all = ProductMaster.getAll?.() || {};
-        for (const bc in all) {
-          if ((all[bc].name || "") === name) {
-            return bc;
-          }
-        }
-      }
+      // 1️⃣ 상품명 자동 채우기 (우선순위 중요)
+if (!nameEl.value) {
+
+  // ① 상품 마스터
+  if (window.ProductMaster) {
+    const m = ProductMaster.get(barcode);
+    if (m?.name) {
+      nameEl.value = m.name;
+    }
+  }
+
+  // ② 최근 납품 데이터 (매출)
+  if (!nameEl.value) {
+    const sales = JSON.parse(localStorage.getItem("sales_list") || "[]");
+    const s = [...sales].reverse().find(x => x.barcode === barcode && x.productName);
+    if (s) {
+      nameEl.value = s.productName;
+    }
+  }
+
+  // ③ 최근 매입 데이터
+  if (!nameEl.value) {
+    const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+    const p = [...purchases].reverse().find(x => x.barcode === barcode && (x.name || x.productName));
+    if (p) {
+      nameEl.value = p.name || p.productName;
+    }
+  }
+}
 
       // 2️⃣ 기존 매입 데이터
       const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");

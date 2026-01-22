@@ -474,10 +474,27 @@ barcodeHintBox.addEventListener("click", (e) => {
   const item = e.target.closest("[data-barcode]");
   if (!item) return;
 
-  barcodeEl.value = item.dataset.barcode;
+  const fullBarcode = item.dataset.barcode;
+
+  // 1️⃣ 바코드 확정
+  barcodeEl.value = fullBarcode;
   barcodeHintBox.style.display = "none";
 
-  // 기존 자동 채우기 로직 재사용
+  // 2️⃣ 🔥 상품명 / 가격 자동 세팅 (스캔과 동일한 로직)
+  if (window.ProductMaster) {
+    const m = ProductMaster.get(fullBarcode);
+    if (m) {
+      nameEl.value = m.name || "";
+      if (m.price) {
+        priceEl.value = formatNumber(m.price);
+      }
+    }
+  }
+
+  // 3️⃣ 이미지 로드
+  loadImageByBarcode(fullBarcode);
+
+  // 4️⃣ 기존 흐름 유지
   barcodeEl.dispatchEvent(new Event("input"));
 });
 
