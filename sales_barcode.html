@@ -191,7 +191,7 @@
 
 <body>
   <div class="page-container">
-    <h1>납품 바코드 등록3</h1>
+    <h1>납품 바코드 등록5</h1>
 
     <!-- 1) 납품일자 -->
     <div class="field">
@@ -409,7 +409,28 @@
       return null;
     }
 
-    
+    // =========================
+    // 🔎 납품 이력 기준 최근 가격 조회
+    // 기준: 거래처 + 바코드
+    // =========================
+    function findLastSalesPrice(partner, barcode) {
+      if (!partner || !barcode) return null;
+
+      const list = JSON.parse(localStorage.getItem("sales_list") || "[]");
+
+      // 최신 납품부터 역순 탐색
+      for (let i = list.length - 1; i >= 0; i--) {
+        const it = list[i];
+        if (
+          it.partner === partner &&
+          it.barcode === barcode &&
+          Number(it.price) > 0
+        ) {
+          return Number(it.price);
+        }
+      }
+      return null;
+    }
 
     // =========================
     // 📚 모든 상품명 + 바코드 수집
@@ -494,12 +515,13 @@
           if (p) nameEl.value = p.productName || p.name || "";
         }
 
-        // ✅ 가격은 거래처 기준 ONLY
-        if (partner && window.SalesPriceMaster) {
+        // ✅ 가격: 납품 이력 기준 (정답 로직)
+        if (partner) {
           const code = resolveBarcodeBySuffix(barcode);
-          const p = SalesPriceMaster.get(partner, code);
-          if (p && (forcePrice || !priceEl.value)) {
-            priceEl.value = formatNumber(p);
+          const lastPrice = findLastSalesPrice(partner, code);
+
+          if (lastPrice && (forcePrice || !priceEl.value)) {
+            priceEl.value = formatNumber(lastPrice);
           }
         }
 
