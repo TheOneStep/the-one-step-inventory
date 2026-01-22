@@ -344,6 +344,7 @@
   </div>
 
   <!-- ✅ 상품명/가격 기억(매입과 다르게 활용) -->
+  <script src="static/js/product_master.js"></script>
   <script src="static/js/sales_price_master.js"></script>
 
   <script>
@@ -402,13 +403,12 @@
     function getAllProducts() {
       const map = new Map();
 
-      // 1️⃣ 상품 마스터
-      if (window.ProductMaster?.getAll) {
-        const all = ProductMaster.getAll();
-        for (const bc in all) {
-          if (all[bc]?.name) {
-            map.set(all[bc].name, bc);
-          }
+      // 1️⃣ 상품명: 최근 매입 기준
+      if (!nameEl.value) {
+        const purchases = JSON.parse(localStorage.getItem("purchase_list") || "[]");
+        const p = purchases.find(x => x.barcode === barcode);
+        if (p) {
+          nameEl.value = p.productName || p.name || "";
         }
       }
 
